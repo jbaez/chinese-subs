@@ -1,0 +1,73 @@
+{
+  "file_name": "'some/file/path/video.mkv'",
+  "tracks": [
+    {
+      "codec": "AVC/H.264/MPEG-4p10",
+      "id": 0,
+      "properties": {
+        "language": "und"
+      },
+      "type": "video"
+    },
+    {
+      "codec": "AAC",
+      "id": 1,
+      "properties": {
+        "language": "chi"
+      },
+      "type": "audio"
+    },
+    {
+      "codec": "SubStationAlpha",
+      "id": 2,
+      "properties": {
+        "codec_id": "S_TEXT/ASS",
+        "encoding": "UTF-8",
+        "language": "eng",
+        "number": 3,
+        "text_subtitles": true,
+        "uid": 3
+      },
+      "type": "subtitles"
+    },
+    {
+      "codec": "SubStationAlpha",
+      "id": 3,
+      "properties": {
+        "codec_id": "S_TEXT/ASS",
+        "encoding": "UTF-8",
+        "language": "chi",
+        "number": 4,
+        "text_subtitles": true,
+        "uid": 4
+      },
+      "type": "subtitles"
+    },
+    {
+      "codec": "SubStationAlpha",
+      "id": 4,
+      "properties": {
+        "codec_id": "S_TEXT/ASS",
+        "encoding": "UTF-8",
+        "language": "ger",
+        "number": 5,
+        "text_subtitles": true,
+        "uid": 5
+      },
+      "type": "subtitles"
+    },
+    {
+      "codec": "SubStationAlpha",
+      "id": 5,
+      "properties": {
+        "codec_id": "S_TEXT/ASS",
+        "encoding": "UTF-8",
+        "language": "spa",
+        "number": 6,
+        "text_subtitles": true,
+        "uid": 6
+      },
+      "type": "subtitles"
+    }
+  ]
+}
