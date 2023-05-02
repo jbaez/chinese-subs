@@ -42,3 +42,7 @@ class IFileInfoReader(ABC):
     @abstractmethod
     def get_file_info(self, file_path: str) -> FileInfoDto | None:
         pass
+
+    @abstractmethod
+    def extract_subtitle(self, file_path: str, track_id: int, output_path: str) -> None:
+        pass

@@ -1,2 +1,5 @@
 subliminal==2.1.0
 pymkv==1.0.8
+asstosrt==0.1.6
+pydantic==1.10.7
+pypinyin==0.48.0

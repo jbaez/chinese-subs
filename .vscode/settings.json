@@ -4,9 +4,13 @@
   },
   "python.formatting.provider": "none",
   "cSpell.words": [
+    "asstosrt",
+    "mkvextract",
     "mkvmerge",
-    "pydantic"
+    "pydantic",
+    "pypinyin"
   ],
   "python.linting.mypyEnabled": true,
-  "python.linting.enabled": true
+  "python.linting.enabled": true,
+  "files.trimTrailingWhitespace": true
 }
