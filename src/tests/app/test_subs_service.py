@@ -17,11 +17,13 @@ class TestSubsServiceOpen(TestCase):
 
     def setUp(self) -> None:
         self.file_path = VIDEO_FILE_PATH
-        fileInfo = get_supported_and_unsupported_fixture()
-        file_info_reader = FileInfoReaderFake({
-            self.file_path: fileInfo
-        })
+        file_info = get_supported_and_unsupported_fixture()
         file_system = FileSystemFake()
+        file_info_reader = FileInfoReaderFake(
+            path_to_info={
+                self.file_path: file_info
+            },
+            file_system=file_system)
         self.sut = SubsService(file_info_reader, file_system)
 
     def test_load_valid_path(self):
@@ -45,10 +47,12 @@ class TestFileReaderService(TestCase):
     def setUp(self) -> None:
         file_path = 'some/file/path/video.mkv'
         file_info = get_supported_and_unsupported_fixture()
-        self.file_info_reader = FileInfoReaderFake({
-            file_path: file_info
-        })
         self.file_system = FileSystemFake()
+        self.file_info_reader = FileInfoReaderFake(
+            path_to_info={
+                file_path: file_info
+            },
+            file_system=self.file_system)
         self.sut = SubsService(self.file_info_reader, self.file_system)
         self.sut.load_path(file_path)
 
@@ -97,12 +101,7 @@ class TestFileReaderService(TestCase):
             when attempting to generate a subtitle with ID '3'
             then a subtitle is generated with pinyin and extension .srt
         '''
-        self.maxDiff = None
-        # Add the .ass file that would be extracted by external lib
-        self.file_system.write(
-            path=TEMP_EXTRACTED_ASS_FILE_PATH,
-            content=CHINESE_SUBTITLE_ASS)
-
+        self.file_info_reader.set_extracted_content(CHINESE_SUBTITLE_ASS)
         result = self.sut.generate_chinese_subtitle_with_pinyin('3')
 
         self.assertEqual(result, SubtitleGenerateResult.SUCCESS)

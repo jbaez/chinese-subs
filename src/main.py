@@ -6,11 +6,15 @@ from infra.file_info_reader_interface import Language
 
 
 def main():
-    file_path = ''
     file_reader = FileInfoReader()
     file_system = FileSystem()
     subs_service = SubsService(file_reader, file_system)
-    subs_service.load_path(file_path)
+    file_path = input('Input file path: ')
+    file_exists = subs_service.load_path(file_path)
+    if not file_exists:
+        print('File does not exist')
+        return
+
     subtitles = subs_service.get_available_languages()
     if subtitles.count == 0:
         print('No subtitles found')

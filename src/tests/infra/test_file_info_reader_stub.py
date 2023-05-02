@@ -1,5 +1,6 @@
 from unittest import TestCase
 from infra.file_info_reader_fake import FileInfoReaderFake
+from infra.file_system_fake import FileSystemFake
 from tests.fixture_file_file_info import get_supported_and_unsupported_fixture
 
 
@@ -9,9 +10,12 @@ class TestFileInfoReaderFake(TestCase):
             When the file exists
             Then returns true
         '''
-        sut = FileInfoReaderFake({
-            'some/file/path/video.mkv': None
-        })
+        file_system = FileSystemFake()
+        sut = FileInfoReaderFake(
+            path_to_info={
+                'some/file/path/video.mkv': None
+            },
+            file_system=file_system)
 
         self.assertTrue(sut.file_exists_at_path('some/file/path/video.mkv'))
 
@@ -20,9 +24,12 @@ class TestFileInfoReaderFake(TestCase):
             When the file does not exist
             Then returns false
         '''
-        sut = FileInfoReaderFake({
-            'some/file/path/video.mkv': None
-        })
+        file_system = FileSystemFake()
+        sut = FileInfoReaderFake(
+            path_to_info={
+                'some/file/path/video.mkv': None
+            },
+            file_system=file_system)
 
         self.assertFalse(sut.file_exists_at_path('wrong/path/to/video.mkv'))
 
@@ -32,9 +39,12 @@ class TestFileInfoReaderFake(TestCase):
             Then returns the file info
         '''
         expected_file_info = get_supported_and_unsupported_fixture()
-        sut = FileInfoReaderFake({
-            'some/file/path/video.mkv': expected_file_info
-        })
+        file_system = FileSystemFake()
+        sut = FileInfoReaderFake(
+            path_to_info={
+                'some/file/path/video.mkv': expected_file_info
+            },
+            file_system=file_system)
 
         file_info = sut.get_file_info('some/file/path/video.mkv')
 
@@ -45,8 +55,11 @@ class TestFileInfoReaderFake(TestCase):
             When the file does not exist
             Then it returns none
         '''
-        sut = FileInfoReaderFake({
-            'some/file/path/video.mkv': None
-        })
+        file_system = FileSystemFake()
+        sut = FileInfoReaderFake(
+            path_to_info={
+                'some/file/path/video.mkv': None
+            },
+            file_system=file_system)
 
         self.assertIsNone(sut.get_file_info('wrong/path/to/video.mkv'))
