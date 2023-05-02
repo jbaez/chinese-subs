@@ -35,7 +35,7 @@ class TestSubsServiceOpen(TestCase):
 
     def test_attempt_to_use_app_if_not_loaded_exception(self):
         with self.assertRaises(PathNotLoadedException):
-            self.sut.get_available_languages()
+            self.sut.get_chinese_subtitles()
 
 
 class TestFileReaderService(TestCase):
@@ -56,22 +56,18 @@ class TestFileReaderService(TestCase):
         self.sut = SubsService(self.file_info_reader, self.file_system)
         self.sut.load_path(file_path)
 
-    def test_get_available_languages(self):
+    def test_get_chinese_subtitles(self):
         '''
-            when asking for available subtitle languages
-            then returns only the available subtitle languages
+            when asking for chinese subtitle languages
+            then returns only the chinese subtitles DTO
         '''
         expected_languages = [
             SubtitleLanguageDto(
                 id=SubTrackID.CHI.value,
                 language=Language.CHINESE,
                 codec=TrackSubCodec.ASS),
-            SubtitleLanguageDto(
-                id=SubTrackID.ENG.value,
-                language=Language.ENGLISH,
-                codec=TrackSubCodec.ASS)
         ]
-        available_languages = self.sut.get_available_languages()
+        available_languages = self.sut.get_chinese_subtitles()
 
         self.assertCountEqual(available_languages, expected_languages)
 

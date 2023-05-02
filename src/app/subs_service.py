@@ -27,7 +27,7 @@ class SubsService:
         self._file_path = file_path
         return self._file_info_reader.file_exists_at_path(file_path)
 
-    def get_available_languages(self) -> list[SubtitleLanguageDto]:
+    def get_chinese_subtitles(self) -> list[SubtitleLanguageDto]:
         if self._file_path is None:
             raise PathNotLoadedException()
 
@@ -35,10 +35,9 @@ class SubsService:
         if file_info is None:
             return []
 
-        available_languages = list(Language)
         all_available_tracks = [track for track in file_info.tracks
                                 if track.codec == TrackSubCodec.ASS
-                                and track.properties.language in available_languages]
+                                and track.properties.language == Language.CHINESE]
 
         return list(map(lambda track: SubtitleLanguageDto(
             id=track.id, language=track.properties.language, codec=track.codec),
@@ -48,7 +47,7 @@ class SubsService:
         if self._file_path is None:
             return SubtitleGenerateResult.NOT_LOADED
 
-        chinese_subtitles = [subtitle for subtitle in self.get_available_languages()
+        chinese_subtitles = [subtitle for subtitle in self.get_chinese_subtitles()
                              if subtitle.language == Language.CHINESE]
 
         if chinese_subtitles.count == 0:

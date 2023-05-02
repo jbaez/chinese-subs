@@ -9,15 +9,16 @@ def main():
     file_reader = FileInfoReader()
     file_system = FileSystem()
     subs_service = SubsService(file_reader, file_system)
+    print('*** Add pinyin to Chinese subtitles ***')
     file_path = input('Input file path: ')
     file_exists = subs_service.load_path(file_path)
     if not file_exists:
         print('File does not exist')
         return
 
-    subtitles = subs_service.get_available_languages()
+    subtitles = subs_service.get_chinese_subtitles()
     if subtitles.count == 0:
-        print('No subtitles found')
+        print('No chinese subtitles found')
         return
 
     print('Subtitles found:')
