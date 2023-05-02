@@ -5,6 +5,9 @@ from io import BytesIO, TextIOWrapper
 class FileSystemFake(IFileSystem):
     _files: dict[str, str] = {}
 
+    def get_file_paths(self) -> list[str]:
+        return list(self._files.keys())
+
     def open(self, file: str, encoding='utf-8') -> TextIOWrapper:
         bytes_data = self._files.get(file, '').encode('utf-8')
         buffer = BytesIO(bytes_data)
@@ -15,3 +18,6 @@ class FileSystemFake(IFileSystem):
 
     def write(self, path: str, content: str) -> None:
         self._files[path] = content
+
+    def remove(self, path: str) -> None:
+        self._files.pop(path)

@@ -1,4 +1,5 @@
 from io import TextIOWrapper
+from os import remove
 
 
 class FileSystem:
@@ -11,3 +12,6 @@ class FileSystem:
     def write(self, path: str, content: str) -> None:
         with open(path, 'w') as f:
             f.write(content)
+
+    def remove(self, path: str) -> None:
+        remove(path)

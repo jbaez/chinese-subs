@@ -96,6 +96,7 @@ class TestFileReaderService(TestCase):
             given there is a chinese subtitle with TrackSubCodec.ASS and ID 3
             when attempting to generate a subtitle with ID '3'
             then a subtitle is generated with pinyin and extension .srt
+            and any temporary files are deleted
         '''
         self.file_info_reader.set_extracted_content(CHINESE_SUBTITLE_ASS)
         result = self.sut.generate_chinese_subtitle_with_pinyin('3')
@@ -103,3 +104,7 @@ class TestFileReaderService(TestCase):
         self.assertEqual(result, SubtitleGenerateResult.SUCCESS)
         self.assertEqual(self.file_system.read(SUBTITLE_EXPECTED_PATH),
                          CHINESE_SUBTITLE_WITH_PINYIN)
+        remaining_paths_after_cleanup = self.file_system.get_file_paths()
+        self.assertEqual(len(remaining_paths_after_cleanup), 1)
+        self.assertTrue(
+            remaining_paths_after_cleanup[0], SUBTITLE_EXPECTED_PATH)

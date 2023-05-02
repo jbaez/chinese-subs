@@ -14,3 +14,7 @@ class IFileSystem(ABC):
     @abstractmethod
     def write(self, path: str, content: str) -> None:
         pass
+
+    @abstractmethod
+    def remove(self, path: str) -> None:
+        pass

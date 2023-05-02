@@ -87,4 +87,7 @@ class SubsService:
         manipulator = SubtitleManipulator(self._file_system)
         manipulator.add_pinyin_to_subtitle(srt_file_path, final_file_path)
 
+        self._file_system.remove(TEMP_EXTRACTED_ASS_FILE_PATH)
+        self._file_system.remove(TEMP_CONVERTED_SRT_FILE_PATH)
+
         return SubtitleGenerateResult.SUCCESS
