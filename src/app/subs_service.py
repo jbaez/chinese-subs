@@ -3,7 +3,7 @@ from infra.file_system_interface import IFileSystem
 from app.exceptions.path_not_loaded_exception import PathNotLoadedException
 from app.core.subtitle_converter import SubtitleConverter
 from app.core.subtitle_manipulator import SubtitleManipulator
-from app.subtitle_dto import SubtitleLanguageDto, SubtitleExternalDto, SubtitleGenerateResult
+from app.subtitle_dto import SubtitleExternalExtension, SubtitleLanguageDto, SubtitleExternalDto, SubtitleGenerateResult
 import os
 
 TEMP_EXTRACTED_ASS_FILE_PATH = 'temp_extracted_ass'
@@ -12,6 +12,8 @@ TEMP_CONVERTED_SRT_FILE_PATH = 'temp_converted.srt'
 
 class SubsService:
     _file_path: str | None = None
+    _supported_extensions: list[str] = [
+        extension.value for extension in SubtitleExternalExtension]
 
     def __init__(
             self, file_info_reader: IFileInfoReader,
@@ -35,6 +37,12 @@ class SubsService:
         if isinstance(id, int):
             return True
         return id.isnumeric()
+
+    def _get_external_subtitle_extension(self, file_path: str) -> SubtitleExternalExtension | None:
+        _, extension = os.path.splitext(file_path)
+        if extension in self._supported_extensions:
+            return SubtitleExternalExtension(extension)
+        return None
 
     def load_path(self, file_path: str) -> bool:
         self._file_path = file_path
@@ -62,8 +70,12 @@ class SubsService:
             self._file_system.get_files_match(f'{file_path_base}*.ass')
 
         for i, path in enumerate(subtitle_paths):
-            external_subtitles.append(
-                SubtitleExternalDto(path=path, id=self._get_external_file_id(i)))
+            extension = self._get_external_subtitle_extension(path)
+            if extension is not None:
+                external_subtitles.append(
+                    SubtitleExternalDto(path=path,
+                                        id=self._get_external_file_id(i),
+                                        extension=extension))
 
         return external_subtitles
 
@@ -79,6 +91,7 @@ class SubsService:
             return SubtitleGenerateResult.NO_SUBTITLES_FOUND
 
         ass_file_path: str | None = None
+        srt_file_path: str | None = None
         if len(chinese_subtitles) > 0:
             if self._is_embedded_subtitle(subtitle_id):
                 chinese_subtitle = next((sub for sub in chinese_subtitles
@@ -103,7 +116,10 @@ class SubsService:
                 source_subtitle = next((sub for sub in external_subtitles
                                         if sub.id == subtitle_id))
                 if (source_subtitle is not None):
-                    ass_file_path = source_subtitle.path
+                    if source_subtitle.extension == SubtitleExternalExtension.ASS:
+                        ass_file_path = source_subtitle.path
+                    elif source_subtitle.extension == SubtitleExternalExtension.SRT:
+                        srt_file_path = source_subtitle.path
 
         if ass_file_path is not None:
             srt_file_path = TEMP_CONVERTED_SRT_FILE_PATH
@@ -113,11 +129,15 @@ class SubsService:
             if ass_file_path == TEMP_EXTRACTED_ASS_FILE_PATH:
                 self._file_system.remove(ass_file_path)
 
+        if srt_file_path is None:
+            return SubtitleGenerateResult.NO_SUBTITLES_FOUND
+
         final_file_path = self._get_base_file_path_appending(
             self._file_path, ' generated.srt')
         manipulator = SubtitleManipulator(self._file_system)
         manipulator.add_pinyin_to_subtitle(srt_file_path, final_file_path)
 
-        self._file_system.remove(srt_file_path)
+        if srt_file_path == TEMP_CONVERTED_SRT_FILE_PATH:
+            self._file_system.remove(srt_file_path)
 
         return SubtitleGenerateResult.SUCCESS

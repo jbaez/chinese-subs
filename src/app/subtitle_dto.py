@@ -9,9 +9,15 @@ class SubtitleLanguageDto(BaseModel):
     codec: TrackSubCodec | str
 
 
+class SubtitleExternalExtension(Enum):
+    SRT = '.srt'
+    ASS = '.ass'
+
+
 class SubtitleExternalDto(BaseModel):
     id: str
     path: str
+    extension: SubtitleExternalExtension
 
 
 class SubtitleGenerateResult(Enum):

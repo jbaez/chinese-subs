@@ -4,10 +4,10 @@ from infra.file_system_fake import FileSystemFake
 from infra.file_info_reader_interface import Language, TrackSubCodec
 from app.subs_service import SubsService
 from app.exceptions.path_not_loaded_exception import PathNotLoadedException
-from app.subtitle_dto import SubtitleExternalDto, SubtitleLanguageDto, SubtitleGenerateResult
+from app.subtitle_dto import SubtitleExternalDto, SubtitleExternalExtension, SubtitleLanguageDto, SubtitleGenerateResult
 from tests.fixture_file_file_info import get_supported_and_unsupported_fixture,\
     VIDEO_FILE_PATH, SUBTITLE_EXPECTED_PATH, SubTrackID,\
-    CHINESE_SUBTITLE_ASS, CHINESE_SUBTITLE_WITH_PINYIN
+    CHINESE_SUBTITLE_ASS, CHINESE_SUBTITLE_WITH_PINYIN, CHINESE_SUBTITLE_SRT
 
 
 class TestSubsServiceOpen(TestCase):
@@ -110,10 +110,10 @@ class TestFileReaderServiceEmbeddedSubs(TestCase):
             remaining_paths_after_cleanup[0], SUBTITLE_EXPECTED_PATH)
 
 
-class TestFileReaderServiceEmbeddedAndExternalSubs(TestCase):
+class TestFileReaderServiceEmbeddedAndExternalAssSubs(TestCase):
     '''
         Given the path to a file with one external subtitle with .ass extension
-        have been loaded
+        has been loaded
     '''
 
     def setUp(self) -> None:
@@ -134,7 +134,7 @@ class TestFileReaderServiceEmbeddedAndExternalSubs(TestCase):
         '''
         external_subtitles = self.sut.get_external_subtitles()
         expected_dto = SubtitleExternalDto(
-            id='ext-0', path=self._external_file_path)
+            id='ext-0', path=self._external_file_path, extension=SubtitleExternalExtension.ASS)
 
         self.assertCountEqual(external_subtitles, [expected_dto])
 
@@ -144,6 +144,52 @@ class TestFileReaderServiceEmbeddedAndExternalSubs(TestCase):
             then a subtitle is generated with pinyin and extension .srt
             and any temporary files are deleted
             and the original .ass file is kept
+        '''
+        result = self.sut.generate_chinese_subtitle_with_pinyin('ext-0')
+
+        self.assertEqual(result, SubtitleGenerateResult.SUCCESS)
+        self.assertEqual(self.file_system.read(SUBTITLE_EXPECTED_PATH),
+                         CHINESE_SUBTITLE_WITH_PINYIN)
+        remaining_paths_after_cleanup = self.file_system.get_file_paths()
+        self.assertEqual(len(remaining_paths_after_cleanup), 2)
+        self.assertCountEqual(
+            remaining_paths_after_cleanup, [SUBTITLE_EXPECTED_PATH, self._external_file_path])
+
+
+class TestFileReaderServiceEmbeddedAndExternalSrtSubs(TestCase):
+    '''
+        Given the path to a file with one external subtitle with .srt extension
+        has been loaded
+    '''
+
+    def setUp(self) -> None:
+        file_path = VIDEO_FILE_PATH
+        self._external_file_path = 'some/file/path/video.srt'
+        self.file_system = FileSystemFake(
+            initial_files={self._external_file_path: CHINESE_SUBTITLE_SRT})
+        self.file_info_reader = FileInfoReaderFake(
+            path_to_info={},
+            file_system=self.file_system)
+        self.sut = SubsService(self.file_info_reader, self.file_system)
+        self.sut.load_path(file_path)
+
+    def test_get_external_subtitles(self):
+        '''
+            when asking for external subtitles
+            then it returns a list of SubtitleExternalDto
+        '''
+        external_subtitles = self.sut.get_external_subtitles()
+        expected_dto = SubtitleExternalDto(
+            id='ext-0', path=self._external_file_path, extension=SubtitleExternalExtension.SRT)
+
+        self.assertCountEqual(external_subtitles, [expected_dto])
+
+    def test_generate_chinese_subtitle_with_pinyin(self):
+        '''
+            when attempting to generate a subtitle with ID 'ext-0'
+            then a subtitle is generated with pinyin and extension .srt
+            and any temporary files are deleted
+            and the original .srt file is kept
         '''
         result = self.sut.generate_chinese_subtitle_with_pinyin('ext-0')
 
