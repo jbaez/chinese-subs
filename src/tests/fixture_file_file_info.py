@@ -8,7 +8,7 @@ class SubTrackID(Enum):
 
 
 VIDEO_FILE_PATH = 'some/file/path/video.mkv'
-SUBTITLE_EXPECTED_PATH = 'some/file/path/video.srt'
+SUBTITLE_EXPECTED_PATH = 'some/file/path/video generated.srt'
 
 CHINESE_SUBTITLE_ASS = '''[Script Info]
 ScriptType: v4.00+

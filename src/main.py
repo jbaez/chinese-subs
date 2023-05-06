@@ -16,18 +16,24 @@ def main():
         print('File does not exist')
         return
 
-    subtitles = subs_service.get_chinese_subtitles()
-    if subtitles.count == 0:
-        print('No chinese subtitles found')
-        return
+    subtitles = subs_service.get_embedded_chinese_subtitles()
+    external_subtitles = subs_service.get_external_subtitles()
+    if subtitles.count == 0 and external_subtitles.count == 0:
+        print('No subtitles found')
 
-    print('Subtitles found:')
-    for subtitle in subtitles:
-        if isinstance(subtitle.language, Language):
-            subtitle_value = subtitle.language.value
-        else:
-            subtitle_value = subtitle.language
-        print(f"{subtitle_value} - ID: {subtitle.id}")
+    if len(subtitles) > 0:
+        print('Embedded subtitles found: ')
+        for subtitle in subtitles:
+            if isinstance(subtitle.language, Language):
+                subtitle_value = subtitle.language.value
+            else:
+                subtitle_value = subtitle.language
+            print(f'ID: {subtitle.id} - {subtitle_value}')
+
+    if len(external_subtitles) > 0:
+        print('External subtitles found: ')
+        for subtitle in external_subtitles:
+            print(f'ID: {subtitle.id} - {subtitle.path}')
 
     subtitle_id = input('Input subtitle ID to add pinyin to: ')
 

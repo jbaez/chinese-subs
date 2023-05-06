@@ -1,9 +1,16 @@
 from infra.file_system_interface import IFileSystem
 from io import BytesIO, TextIOWrapper
+import re
 
 
 class FileSystemFake(IFileSystem):
-    _files: dict[str, str] = {}
+
+    def __init__(self, initial_files: dict[str, str] = {}) -> None:
+        '''
+        Parameters:
+        initial_files: dict[str, str] = A dictionary of file paths and their contents.
+        '''
+        self._files = initial_files.copy()
 
     def get_file_paths(self) -> list[str]:
         return list(self._files.keys())
@@ -21,3 +28,6 @@ class FileSystemFake(IFileSystem):
 
     def remove(self, path: str) -> None:
         self._files.pop(path)
+
+    def get_files_match(self, pattern: str) -> list[str]:
+        return [path for path in self._files.keys() if re.match(pattern, path)]

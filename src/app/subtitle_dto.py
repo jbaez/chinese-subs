@@ -9,8 +9,14 @@ class SubtitleLanguageDto(BaseModel):
     codec: TrackSubCodec | str
 
 
+class SubtitleExternalDto(BaseModel):
+    id: str
+    path: str
+
+
 class SubtitleGenerateResult(Enum):
     SUCCESS = 'SUCCESS'
     NOT_LOADED = 'NOT_LOADED'
+    NO_SUBTITLES_FOUND = 'NO_SUBTITLES_FOUND'
     NO_CHINESE_FOUND = 'NO_CHINESE_FOUND'
     CODEC_NOT_SUPPORTED = 'CODEC_NOT_SUPPORTED'

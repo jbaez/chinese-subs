@@ -2,9 +2,9 @@ from unittest import TestCase
 from infra.file_info_reader_fake import FileInfoReaderFake
 from infra.file_system_fake import FileSystemFake
 from infra.file_info_reader_interface import Language, TrackSubCodec
-from app.subs_service import SubsService, TEMP_EXTRACTED_ASS_FILE_PATH
+from app.subs_service import SubsService
 from app.exceptions.path_not_loaded_exception import PathNotLoadedException
-from app.subtitle_dto import SubtitleLanguageDto, SubtitleGenerateResult
+from app.subtitle_dto import SubtitleExternalDto, SubtitleLanguageDto, SubtitleGenerateResult
 from tests.fixture_file_file_info import get_supported_and_unsupported_fixture,\
     VIDEO_FILE_PATH, SUBTITLE_EXPECTED_PATH, SubTrackID,\
     CHINESE_SUBTITLE_ASS, CHINESE_SUBTITLE_WITH_PINYIN
@@ -12,7 +12,7 @@ from tests.fixture_file_file_info import get_supported_and_unsupported_fixture,\
 
 class TestSubsServiceOpen(TestCase):
     '''
-        Given the path to a single video file with subs is valid
+        Given the path to a single video file with embedded subs is valid
     '''
 
     def setUp(self) -> None:
@@ -35,17 +35,17 @@ class TestSubsServiceOpen(TestCase):
 
     def test_attempt_to_use_app_if_not_loaded_exception(self):
         with self.assertRaises(PathNotLoadedException):
-            self.sut.get_chinese_subtitles()
+            self.sut.get_embedded_chinese_subtitles()
 
 
-class TestFileReaderService(TestCase):
+class TestFileReaderServiceEmbeddedSubs(TestCase):
     '''
         Given the path to a file with embedded supported and unsupported
         subtitle languages with TrackSubCodec.ASS codec have been loaded
     '''
 
     def setUp(self) -> None:
-        file_path = 'some/file/path/video.mkv'
+        file_path = VIDEO_FILE_PATH
         file_info = get_supported_and_unsupported_fixture()
         self.file_system = FileSystemFake()
         self.file_info_reader = FileInfoReaderFake(
@@ -67,7 +67,7 @@ class TestFileReaderService(TestCase):
                 language=Language.CHINESE,
                 codec=TrackSubCodec.ASS),
         ]
-        available_languages = self.sut.get_chinese_subtitles()
+        available_languages = self.sut.get_embedded_chinese_subtitles()
 
         self.assertCountEqual(available_languages, expected_languages)
 
@@ -108,3 +108,49 @@ class TestFileReaderService(TestCase):
         self.assertEqual(len(remaining_paths_after_cleanup), 1)
         self.assertTrue(
             remaining_paths_after_cleanup[0], SUBTITLE_EXPECTED_PATH)
+
+
+class TestFileReaderServiceEmbeddedAndExternalSubs(TestCase):
+    '''
+        Given the path to a file with one external subtitle with .ass extension
+        have been loaded
+    '''
+
+    def setUp(self) -> None:
+        file_path = VIDEO_FILE_PATH
+        self._external_file_path = 'some/file/path/video.ass'
+        self.file_system = FileSystemFake(
+            initial_files={self._external_file_path: CHINESE_SUBTITLE_ASS})
+        self.file_info_reader = FileInfoReaderFake(
+            path_to_info={},
+            file_system=self.file_system)
+        self.sut = SubsService(self.file_info_reader, self.file_system)
+        self.sut.load_path(file_path)
+
+    def test_get_external_subtitles(self):
+        '''
+            when asking for external subtitles
+            then it returns a list of SubtitleExternalDto
+        '''
+        external_subtitles = self.sut.get_external_subtitles()
+        expected_dto = SubtitleExternalDto(
+            id='ext-0', path=self._external_file_path)
+
+        self.assertCountEqual(external_subtitles, [expected_dto])
+
+    def test_generate_chinese_subtitle_with_pinyin(self):
+        '''
+            when attempting to generate a subtitle with ID 'ext-0'
+            then a subtitle is generated with pinyin and extension .srt
+            and any temporary files are deleted
+            and the original .ass file is kept
+        '''
+        result = self.sut.generate_chinese_subtitle_with_pinyin('ext-0')
+
+        self.assertEqual(result, SubtitleGenerateResult.SUCCESS)
+        self.assertEqual(self.file_system.read(SUBTITLE_EXPECTED_PATH),
+                         CHINESE_SUBTITLE_WITH_PINYIN)
+        remaining_paths_after_cleanup = self.file_system.get_file_paths()
+        self.assertEqual(len(remaining_paths_after_cleanup), 2)
+        self.assertCountEqual(
+            remaining_paths_after_cleanup, [SUBTITLE_EXPECTED_PATH, self._external_file_path])

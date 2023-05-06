@@ -18,3 +18,7 @@ class IFileSystem(ABC):
     @abstractmethod
     def remove(self, path: str) -> None:
         pass
+
+    @abstractmethod
+    def get_files_match(self, pattern: str) -> list[str]:
+        pass
