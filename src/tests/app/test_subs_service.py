@@ -2,10 +2,10 @@ from unittest import TestCase
 from infra.file_info_reader_fake import FileInfoReaderFake
 from infra.file_system_fake import FileSystemFake
 from infra.file_info_reader_interface import Language, TrackSubCodec
-from app.subs_service import SubsService
+from app.subs_service import AddAdditionalLanguage, AddAdditionalLanguageMode, SubsService
 from app.exceptions.path_not_loaded_exception import PathNotLoadedException
 from app.subtitle_dto import SubtitleExternalDto, SubtitleExternalExtension, SubtitleLanguageDto, SubtitleGenerateResult
-from tests.fixture_file_file_info import get_supported_and_unsupported_fixture,\
+from tests.fixture_file_file_info import CHINESE_SUBTITLE_WITH_PINYIN_AND_ENGLISH, ENGLISH_SUBTITLE_ASS, ENGLISH_SUBTITLE_WITH_PINYIN, get_supported_and_unsupported_fixture,\
     VIDEO_FILE_PATH, SUBTITLE_EXPECTED_PATH, SubTrackID,\
     CHINESE_SUBTITLE_ASS, CHINESE_SUBTITLE_WITH_PINYIN, CHINESE_SUBTITLE_SRT
 
@@ -35,7 +35,7 @@ class TestSubsServiceOpen(TestCase):
 
     def test_attempt_to_use_app_if_not_loaded_exception(self):
         with self.assertRaises(PathNotLoadedException):
-            self.sut.get_embedded_chinese_subtitles()
+            self.sut.get_embedded_subtitles()
 
 
 class TestFileReaderServiceEmbeddedSubs(TestCase):
@@ -66,8 +66,12 @@ class TestFileReaderServiceEmbeddedSubs(TestCase):
                 id=SubTrackID.CHI.value,
                 language=Language.CHINESE,
                 codec=TrackSubCodec.ASS),
+            SubtitleLanguageDto(
+                id=SubTrackID.ENG.value,
+                language=Language.ENGLISH,
+                codec=TrackSubCodec.ASS),
         ]
-        available_languages = self.sut.get_embedded_chinese_subtitles()
+        available_languages = self.sut.get_embedded_subtitles()
 
         self.assertCountEqual(available_languages, expected_languages)
 
@@ -98,12 +102,66 @@ class TestFileReaderServiceEmbeddedSubs(TestCase):
             then a subtitle is generated with pinyin and extension .srt
             and any temporary files are deleted
         '''
-        self.file_info_reader.set_extracted_content(CHINESE_SUBTITLE_ASS)
+        self.file_info_reader.add_extracted_content(CHINESE_SUBTITLE_ASS)
         result = self.sut.generate_chinese_subtitle_with_pinyin('3')
 
         self.assertEqual(result, SubtitleGenerateResult.SUCCESS)
         self.assertEqual(self.file_system.read(SUBTITLE_EXPECTED_PATH),
                          CHINESE_SUBTITLE_WITH_PINYIN)
+        remaining_paths_after_cleanup = self.file_system.get_file_paths()
+        self.assertEqual(len(remaining_paths_after_cleanup), 1)
+        self.assertTrue(
+            remaining_paths_after_cleanup[0], SUBTITLE_EXPECTED_PATH)
+
+    def test_generate_chinese_subtitle_with_pinyin_and_additional_language(self):
+        '''
+            given there is a chinese subtitle with TrackSubCodec.ASS and ID 3
+            and a english subtitle with TrackSubCodec.ASS and ID 2
+            when generating a subtitle with chinese and pinyin using ID '3'
+            and adding english as the additional language using ID '2'
+            then a subtitle is generated with chinese, pinyin and english with extension .srt
+            and any temporary files are deleted
+        '''
+        self.maxDiff = None
+        self.file_info_reader.add_extracted_content(CHINESE_SUBTITLE_ASS)
+        self.file_info_reader.add_extracted_content(ENGLISH_SUBTITLE_ASS)
+        result = self.sut.generate_subtitle_with_additional_language(
+            chinese_subtitle_id='3',
+            other_subtitle=AddAdditionalLanguage(
+                mode=AddAdditionalLanguageMode.WITH_CHINESE_AND_PINYIN,
+                subtitle_id='2'))
+
+        self.assertEqual(result, SubtitleGenerateResult.SUCCESS)
+        print(self.file_system.read(SUBTITLE_EXPECTED_PATH))
+        self.assertEqual(self.file_system.read(SUBTITLE_EXPECTED_PATH),
+                         CHINESE_SUBTITLE_WITH_PINYIN_AND_ENGLISH)
+        remaining_paths_after_cleanup = self.file_system.get_file_paths()
+        self.assertEqual(len(remaining_paths_after_cleanup), 1)
+        self.assertTrue(
+            remaining_paths_after_cleanup[0], SUBTITLE_EXPECTED_PATH)
+
+    def test_generate_english_subtitle_with_pinyin(self):
+        '''
+            given there is a chinese subtitle with TrackSubCodec.ASS and ID 3
+            and a english subtitle with TrackSubCodec.ASS and ID 2
+            when generating a subtitle with pinyin using ID '3'
+            and adding english as the additional language using ID '2'
+            then a subtitle is generated with pinyin and english with extension .srt
+            and any temporary files are deleted
+        '''
+        self.maxDiff = None
+        self.file_info_reader.add_extracted_content(CHINESE_SUBTITLE_ASS)
+        self.file_info_reader.add_extracted_content(ENGLISH_SUBTITLE_ASS)
+        result = self.sut.generate_subtitle_with_additional_language(
+            chinese_subtitle_id='3',
+            other_subtitle=AddAdditionalLanguage(
+                mode=AddAdditionalLanguageMode.WITH_PINYIN,
+                subtitle_id='2'))
+
+        self.assertEqual(result, SubtitleGenerateResult.SUCCESS)
+        print(self.file_system.read(SUBTITLE_EXPECTED_PATH))
+        self.assertEqual(self.file_system.read(SUBTITLE_EXPECTED_PATH),
+                         ENGLISH_SUBTITLE_WITH_PINYIN)
         remaining_paths_after_cleanup = self.file_system.get_file_paths()
         self.assertEqual(len(remaining_paths_after_cleanup), 1)
         self.assertTrue(

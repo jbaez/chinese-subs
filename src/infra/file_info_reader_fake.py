@@ -3,6 +3,7 @@ from infra.file_system_interface import IFileSystem
 
 
 class FileInfoReaderFake(IFileInfoReader):
+    _extracted_content: list[str] = []
 
     def __init__(
             self,
@@ -12,8 +13,8 @@ class FileInfoReaderFake(IFileInfoReader):
         self._path_to_info = path_to_info
         self._file_system = file_system
 
-    def set_extracted_content(self, content: str) -> None:
-        self._extracted_content = content
+    def add_extracted_content(self, content: str) -> None:
+        self._extracted_content.append(content)
 
     def file_exists_at_path(self, file_path: str) -> bool:
         return file_path in self._path_to_info
@@ -28,4 +29,4 @@ class FileInfoReaderFake(IFileInfoReader):
             return
         self._file_system.write(
             path=output_path,
-            content=self._extracted_content)
+            content=self._extracted_content.pop(0))

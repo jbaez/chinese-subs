@@ -42,32 +42,6 @@
         "uid": 4
       },
       "type": "subtitles"
-    },
-    {
-      "codec": "SubStationAlpha",
-      "id": 4,
-      "properties": {
-        "codec_id": "S_TEXT/ASS",
-        "encoding": "UTF-8",
-        "language": "ger",
-        "number": 5,
-        "text_subtitles": true,
-        "uid": 5
-      },
-      "type": "subtitles"
-    },
-    {
-      "codec": "SubStationAlpha",
-      "id": 5,
-      "properties": {
-        "codec_id": "S_TEXT/ASS",
-        "encoding": "UTF-8",
-        "language": "spa",
-        "number": 6,
-        "text_subtitles": true,
-        "uid": 6
-      },
-      "type": "subtitles"
     }
   ]
 }
