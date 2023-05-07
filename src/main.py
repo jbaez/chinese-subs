@@ -4,6 +4,8 @@ from app.subtitle_dto import SubtitleGenerateResult
 from infra.file_info_reader import FileInfoReader
 from infra.file_system import FileSystem
 from infra.file_info_reader_interface import Language
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import PathCompleter
 
 
 CHINESE_WITH_PINYIN: Literal['CHINESE_WITH_PINYIN'] = 'CHINESE_WITH_PINYIN'
@@ -32,7 +34,8 @@ def main():
     subtitle_service = SubtitleService(file_reader, file_system)
     print('*** Chinese subtitle tool ***')
 
-    file_path = input('Input video file path: ')
+    path_completer = PathCompleter()
+    file_path = prompt('Input video file path: ', completer=path_completer)
     file_exists = subtitle_service.load_path(file_path)
     if not file_exists:
         print('File not found with given path')
