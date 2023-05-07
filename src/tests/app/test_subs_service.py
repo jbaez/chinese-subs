@@ -2,7 +2,7 @@ from unittest import TestCase
 from infra.file_info_reader_fake import FileInfoReaderFake
 from infra.file_system_fake import FileSystemFake
 from infra.file_info_reader_interface import Language, TrackSubCodec
-from app.subs_service import AddAdditionalLanguage, AddAdditionalLanguageMode, SubsService
+from app.subtitle_service import AddAdditionalLanguage, AddAdditionalLanguageMode, SubtitleService
 from app.exceptions.path_not_loaded_exception import PathNotLoadedException
 from app.subtitle_dto import SubtitleExternalDto, SubtitleExternalExtension, SubtitleLanguageDto, SubtitleGenerateResult
 from tests.fixture_file_file_info import CHINESE_SUBTITLE_WITH_PINYIN_AND_ENGLISH, ENGLISH_SUBTITLE_ASS, ENGLISH_SUBTITLE_WITH_PINYIN, get_supported_and_unsupported_fixture,\
@@ -24,7 +24,7 @@ class TestSubsServiceOpen(TestCase):
                 self.file_path: file_info
             },
             file_system=file_system)
-        self.sut = SubsService(file_info_reader, file_system)
+        self.sut = SubtitleService(file_info_reader, file_system)
 
     def test_load_valid_path(self):
         '''
@@ -53,7 +53,7 @@ class TestFileReaderServiceEmbeddedSubs(TestCase):
                 file_path: file_info
             },
             file_system=self.file_system)
-        self.sut = SubsService(self.file_info_reader, self.file_system)
+        self.sut = SubtitleService(self.file_info_reader, self.file_system)
         self.sut.load_path(file_path)
 
     def test_get_chinese_subtitles(self):
@@ -182,7 +182,7 @@ class TestFileReaderServiceEmbeddedAndExternalAssSubs(TestCase):
         self.file_info_reader = FileInfoReaderFake(
             path_to_info={},
             file_system=self.file_system)
-        self.sut = SubsService(self.file_info_reader, self.file_system)
+        self.sut = SubtitleService(self.file_info_reader, self.file_system)
         self.sut.load_path(file_path)
 
     def test_get_external_subtitles(self):
@@ -228,7 +228,7 @@ class TestFileReaderServiceEmbeddedAndExternalSrtSubs(TestCase):
         self.file_info_reader = FileInfoReaderFake(
             path_to_info={},
             file_system=self.file_system)
-        self.sut = SubsService(self.file_info_reader, self.file_system)
+        self.sut = SubtitleService(self.file_info_reader, self.file_system)
         self.sut.load_path(file_path)
 
     def test_get_external_subtitles(self):

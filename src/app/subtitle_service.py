@@ -23,7 +23,7 @@ class AddAdditionalLanguage(NamedTuple):
     subtitle_id: int | str
 
 
-class SubsService:
+class SubtitleService:
     _file_path: str | None = None
     _supported_extensions: list[str] = [
         extension.value for extension in SubtitleExternalExtension]

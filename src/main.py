@@ -1,5 +1,5 @@
 from typing import Literal
-from app.subs_service import AddAdditionalLanguage, AddAdditionalLanguageMode, SubsService
+from app.subtitle_service import AddAdditionalLanguage, AddAdditionalLanguageMode, SubtitleService
 from app.subtitle_dto import SubtitleGenerateResult
 from infra.file_info_reader import FileInfoReader
 from infra.file_system import FileSystem
@@ -29,17 +29,17 @@ def get_generate_subtitle_mode() -> AddAdditionalLanguageMode | Literal['CHINESE
 def main():
     file_reader = FileInfoReader()
     file_system = FileSystem()
-    subs_service = SubsService(file_reader, file_system)
+    subtitle_service = SubtitleService(file_reader, file_system)
     print('*** Chinese subtitle tool ***')
 
     file_path = input('Input video file path: ')
-    file_exists = subs_service.load_path(file_path)
+    file_exists = subtitle_service.load_path(file_path)
     if not file_exists:
         print('File not found with given path')
         return
 
-    embedded_subtitles = subs_service.get_embedded_subtitles()
-    external_subtitles = subs_service.get_external_subtitles()
+    embedded_subtitles = subtitle_service.get_embedded_subtitles()
+    external_subtitles = subtitle_service.get_external_subtitles()
     if embedded_subtitles.count == 0 and external_subtitles.count == 0:
         print('No subtitles found')
 
@@ -70,14 +70,14 @@ def main():
             main()
             return
 
-        result = subs_service.generate_subtitle_with_additional_language(
+        result = subtitle_service.generate_subtitle_with_additional_language(
             subtitle_id,
             AddAdditionalLanguage(
                 mode=mode,
                 subtitle_id=additional_subtitle_id
             ))
     else:
-        result = subs_service.generate_chinese_subtitle_with_pinyin(
+        result = subtitle_service.generate_chinese_subtitle_with_pinyin(
             subtitle_id)
 
     if result == SubtitleGenerateResult.CODEC_NOT_SUPPORTED:
