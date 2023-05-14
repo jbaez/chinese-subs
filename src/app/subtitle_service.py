@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import NamedTuple
+from typing import NamedTuple, Tuple
 from infra.file_info_reader_interface import IFileInfoReader, Language, TrackSubCodec
 from infra.file_system_interface import IFileSystem
 from app.exceptions.path_not_loaded_exception import PathNotLoadedException
@@ -23,8 +23,15 @@ class AddAdditionalLanguage(NamedTuple):
     subtitle_id: int | str
 
 
+class LoadResult(Enum):
+    FILE_LOADED = 'FILE_LOADED'
+    DIR_LOADED = 'DIR_LOADED'
+    INVALID_PATH = 'INVALID_PATH'
+
+
 class SubtitleService:
     _file_path: str | None = None
+    _file_path_load_result: LoadResult | None
     _supported_extensions: list[str] = [
         extension.value for extension in SubtitleExternalExtension]
 
@@ -34,10 +41,15 @@ class SubtitleService:
         self._file_info_reader = file_info_reader
         self._file_system = file_system
 
-    def _get_file_path(self) -> str:
-        if self._file_path is None:
+    def _get_file_path(self) -> Tuple[str, LoadResult]:
+        if self._file_path is None or self._file_path_load_result is None:
             raise PathNotLoadedException()
-        return self._file_path
+        return (self._file_path, self._file_path_load_result)
+
+    def _get_supported_files_in_dir(self, dir_path: str) -> list[str]:
+        return [self._file_system.join_path(dir_path, f)
+                for f in self._file_system.list_dir(dir_path)
+                if not self._file_system.path_is_dir(f) and f.endswith(('.mp4', '.mkv'))]
 
     def _get_base_file_path_appending(self, file_path: str, append_to_base: str) -> str:
         base, _ = os.path.splitext(file_path)
@@ -113,15 +125,36 @@ class SubtitleService:
 
         return srt_file_path
 
-    def _generate_subtitle(
-            self,
-            chinese_subtitle_id: int | str,
-            additional_subtitle: AddAdditionalLanguage | None = None) -> SubtitleGenerateResult:
-        if self._file_path is None:
+    def _generate_subtitle(self,
+                           chinese_subtitle_id: int | str,
+                           additional_subtitle: AddAdditionalLanguage | None = None) -> SubtitleGenerateResult:
+        try:
+            file_path, file_path_type = self._get_file_path()
+        except:
             return SubtitleGenerateResult.NOT_LOADED
 
+        if file_path_type == LoadResult.DIR_LOADED:
+            supported_files = self._get_supported_files_in_dir(file_path)
+            result = SubtitleGenerateResult.NO_SUBTITLES_FOUND
+            for file in supported_files:
+                result = self._generate_subtitle_for_path(
+                    file, chinese_subtitle_id, additional_subtitle)
+                if result != SubtitleGenerateResult.SUCCESS:
+                    return result
+
+            return result
+
+        else:
+            return self._generate_subtitle_for_path(file_path, chinese_subtitle_id, additional_subtitle)
+
+    def _generate_subtitle_for_path(
+            self,
+            file_path: str,
+            chinese_subtitle_id: int | str,
+            additional_subtitle: AddAdditionalLanguage | None = None) -> SubtitleGenerateResult:
+
         srt_file_path = self._generate_and_get_srt_file_path(
-            self._file_path, chinese_subtitle_id)
+            file_path, chinese_subtitle_id)
 
         if isinstance(srt_file_path, SubtitleGenerateResult):
             return srt_file_path
@@ -134,7 +167,7 @@ class SubtitleService:
 
         if additional_subtitle is None:
             pinyin_file_path = self._get_base_file_path_appending(
-                self._file_path, ' generated.srt')
+                file_path, ' generated.srt')
         else:
             pinyin_file_path = TEMP_PINYIN_SRT_FILE_PATH
 
@@ -147,12 +180,12 @@ class SubtitleService:
 
         if additional_subtitle is not None:
             srt_file_path = self._generate_and_get_srt_file_path(
-                self._file_path, additional_subtitle.subtitle_id, False)
+                file_path, additional_subtitle.subtitle_id, False)
             if isinstance(srt_file_path, SubtitleGenerateResult):
                 return srt_file_path
 
             final_file_path = self._get_base_file_path_appending(
-                self._file_path, ' generated.srt')
+                file_path, ' generated.srt')
             manipulator.add_language_to_subtitle(
                 pinyin_file_path, srt_file_path, final_file_path)
 
@@ -164,13 +197,30 @@ class SubtitleService:
 
         return SubtitleGenerateResult.SUCCESS
 
-    def load_path(self, file_path: str) -> bool:
+    def load_path(self, file_path: str) -> LoadResult:
         self._file_path = file_path
-        return self._file_info_reader.file_exists_at_path(file_path)
+        if not self._file_system.path_exists(file_path):
+            self._file_path_load_result = LoadResult.INVALID_PATH
+        elif self._file_system.path_is_dir(file_path):
+            self._file_path_load_result = LoadResult.DIR_LOADED
+        else:
+            self._file_path_load_result = LoadResult.FILE_LOADED
+
+        return self._file_path_load_result
 
     def get_embedded_subtitles(self) -> list[SubtitleLanguageDto]:
-        file_path = self._get_file_path()
-        file_info = self._file_info_reader.get_file_info(file_path)
+        file_path, file_path_type = self._get_file_path()
+
+        if file_path_type == LoadResult.DIR_LOADED:
+            supported_files = self._get_supported_files_in_dir(file_path)
+            if len(supported_files) == 0:
+                return []
+
+            file_info = self._file_info_reader.get_file_info(
+                supported_files[0])
+        else:
+            file_info = self._file_info_reader.get_file_info(file_path)
+
         if file_info is None:
             return []
 
@@ -182,13 +232,13 @@ class SubtitleService:
             all_available_tracks))
 
     def get_external_subtitles(self) -> list[SubtitleExternalDto]:
-        file_path = self._get_file_path()
+        file_path, _ = self._get_file_path()
         external_subtitles: list[SubtitleExternalDto] = []
-        file_path_base = self._get_base_file_path_appending(file_path, '')
-        subtitle_paths = self._file_system.get_files_match(f'{file_path_base}*.srt') + \
-            self._file_system.get_files_match(f'{file_path_base}*.ass')
+        dir_path = self._file_system.get_dir_path(file_path)
+        subtitle_files = [self._file_system.join_path(dir_path, f)
+                          for f in self._file_system.list_dir(dir_path)]
 
-        for i, path in enumerate(subtitle_paths):
+        for i, path in enumerate(subtitle_files):
             extension = self._get_external_subtitle_extension(path)
             if extension is not None:
                 external_subtitles.append(

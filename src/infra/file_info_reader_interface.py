@@ -36,11 +36,7 @@ class FileInfoDto(BaseModel):
 
 class IFileInfoReader(ABC):
     @abstractmethod
-    def file_exists_at_path(self, file_path: str) -> bool:
-        pass
-
-    @abstractmethod
-    def get_file_info(self, file_path: str) -> FileInfoDto | None:
+    def get_file_info(self, file_path: str) -> FileInfoDto:
         pass
 
     @abstractmethod

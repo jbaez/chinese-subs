@@ -7,6 +7,9 @@ Current options are:
 - other language with pinyin
 - chinese with pinyin and other language
 
+A single video file or a directory with multiple video files can be input.
+Currently, if a directory is input it would use the first video in the directory to show the available subtitles information. Then the selected subtitle options would be used for the rest of the videos in the directory, which means all videos must have the same options.
+
 To setup the project:
 
 - `make start_venv`

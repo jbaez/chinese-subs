@@ -16,17 +16,10 @@ class FileInfoReaderFake(IFileInfoReader):
     def add_extracted_content(self, content: str) -> None:
         self._extracted_content.append(content)
 
-    def file_exists_at_path(self, file_path: str) -> bool:
-        return file_path in self._path_to_info
-
-    def get_file_info(self, file_path: str) -> FileInfoDto | None:
-        if not self.file_exists_at_path(file_path):
-            return None
+    def get_file_info(self, file_path: str) -> FileInfoDto:
         return self._path_to_info[file_path]
 
     def extract_subtitle(self, file_path: str, track_id: int, output_path: str) -> None:
-        if not self.file_exists_at_path(file_path):
-            return
         self._file_system.write(
             path=output_path,
             content=self._extracted_content.pop(0))

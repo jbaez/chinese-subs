@@ -1,5 +1,5 @@
 from typing import Literal
-from app.subtitle_service import AddAdditionalLanguage, AddAdditionalLanguageMode, SubtitleService
+from app.subtitle_service import AddAdditionalLanguage, AddAdditionalLanguageMode, LoadResult, SubtitleService
 from app.subtitle_dto import SubtitleGenerateResult
 from infra.file_info_reader import FileInfoReader
 from infra.file_system import FileSystem
@@ -36,15 +36,19 @@ def main():
 
     path_completer = PathCompleter()
     file_path = prompt('Input video file path: ', completer=path_completer)
-    file_exists = subtitle_service.load_path(file_path)
-    if not file_exists:
+    loaded_result = subtitle_service.load_path(file_path)
+    if loaded_result == LoadResult.INVALID_PATH:
         print('File not found with given path')
         return
 
+    if loaded_result == LoadResult.DIR_LOADED:
+        print('A directory has been selected. Showing info for the first file in the directory...')
+
     embedded_subtitles = subtitle_service.get_embedded_subtitles()
     external_subtitles = subtitle_service.get_external_subtitles()
-    if embedded_subtitles.count == 0 and external_subtitles.count == 0:
+    if len(embedded_subtitles) == 0 and len(external_subtitles) == 0:
         print('No subtitles found')
+        return
 
     if len(embedded_subtitles) > 0:
         print('\nEmbedded subtitles found: ')

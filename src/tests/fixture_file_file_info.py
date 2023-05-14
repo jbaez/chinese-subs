@@ -8,7 +8,10 @@ class SubTrackID(Enum):
 
 
 VIDEO_FILE_PATH = 'some/file/path/video.mkv'
+VIDEO_2_FILE_PATH = 'some/file/path/video_2.mkv'
+VIDEOS_DIR_PATH = 'some/file/path'
 SUBTITLE_EXPECTED_PATH = 'some/file/path/video generated.srt'
+SUBTITLE_2_EXPECTED_PATH = 'some/file/path/video generated.srt'
 
 CHINESE_SUBTITLE_ASS = '''[Script Info]
 ScriptType: v4.00+
@@ -24,7 +27,7 @@ Style: Default,sans-serif,71,&H00FFFFFF,&H00FFFFFF,&H000F0F0F,&H000F0F0F,0,0,0,0
 
 [Events]
 Format: Layer, Start, End, Style, Actor, MarginL, MarginR, MarginV, Effect, Text
-Dialogue: 0,0:00:06.85,0:00:09.97,Default,,0,0,0,,‎NETFLIX 原创动画剧集
+Dialogue: 0,0:00:06.85,0:00:09.97,Default,,0,0,0,,‎VIDEO 原创动画剧集
 Dialogue: 0,0:01:20.35,0:01:22.97,Default,,0,0,0,,‎真不愧是天下第一刺客
 '''
 
@@ -49,7 +52,7 @@ Dialogue: 0,0:01:20.35,0:01:22.97,Default,,0,0,0,,You really are the greatest ki
 
 CHINESE_SUBTITLE_SRT = '''1
 00:00:06,850 --> 00:00:09,970
-‎NETFLIX 原创动画剧集
+‎VIDEO 原创动画剧集
 
 2
 00:01:20,350 --> 00:01:22,970
@@ -75,7 +78,7 @@ in the world.
 
 CHINESE_SUBTITLE_WITH_PINYIN = '''1
 00:00:06,850 --> 00:00:09,970
-<font color="#ffffff">‎NETFLIX 原创动画剧集</font><br><font color="#00ffff">‎NETFLIX  yuán chuàng dòng huà jù jí</font>
+<font color="#ffffff">‎VIDEO 原创动画剧集</font><br><font color="#00ffff">‎VIDEO  yuán chuàng dòng huà jù jí</font>
 
 2
 00:01:20,350 --> 00:01:22,970
@@ -85,7 +88,7 @@ CHINESE_SUBTITLE_WITH_PINYIN = '''1
 
 CHINESE_SUBTITLE_WITH_PINYIN_AND_ENGLISH = '''1
 00:00:06,850 --> 00:00:09,970
-<font color="#ffffff">‎NETFLIX 原创动画剧集</font><br><font color="#00ffff">‎NETFLIX  yuán chuàng dòng huà jù jí</font>
+<font color="#ffffff">‎VIDEO 原创动画剧集</font><br><font color="#00ffff">‎VIDEO  yuán chuàng dòng huà jù jí</font>
 
 2
 00:00:26,100 --> 00:00:29,270
@@ -109,7 +112,7 @@ in the world.
 
 ENGLISH_SUBTITLE_WITH_PINYIN = '''1
 00:00:06,850 --> 00:00:09,970
-<font color="#00ffff">‎NETFLIX  yuán chuàng dòng huà jù jí</font>
+<font color="#00ffff">‎VIDEO  yuán chuàng dòng huà jù jí</font>
 
 2
 00:00:26,100 --> 00:00:29,270
