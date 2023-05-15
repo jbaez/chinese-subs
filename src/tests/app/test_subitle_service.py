@@ -10,7 +10,7 @@ from tests.fixture_file_file_info import CHINESE_SUBTITLE_WITH_PINYIN_AND_ENGLIS
     CHINESE_SUBTITLE_ASS, CHINESE_SUBTITLE_WITH_PINYIN, CHINESE_SUBTITLE_SRT
 
 
-class TestSubsServiceOpen(TestCase):
+class TestSubtitleServiceOpen(TestCase):
     '''
         Given the path to a single video file with embedded subs is valid
     '''
