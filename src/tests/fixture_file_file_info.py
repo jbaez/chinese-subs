@@ -135,5 +135,9 @@ in the world.
 '''
 
 
-def get_supported_and_unsupported_fixture() -> FileInfoDto:
-    return FileInfoDto.parse_file('src/tests/fixture_file_info_all_lang.json')
+def get_embedded_ass_fixture() -> FileInfoDto:
+    return FileInfoDto.parse_file('src/tests/fixture_file_info_ass.json')
+
+
+def get_embedded_srt_fixture() -> FileInfoDto:
+    return FileInfoDto.parse_file('src/tests/fixture_file_info_srt.json')

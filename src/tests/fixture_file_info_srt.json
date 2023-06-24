@@ -1,0 +1,47 @@
+{
+  "file_name": "'some/file/path/video.mkv'",
+  "tracks": [
+    {
+      "codec": "AVC/H.264/MPEG-4p10",
+      "id": 0,
+      "properties": {
+        "language": "und"
+      },
+      "type": "video"
+    },
+    {
+      "codec": "AAC",
+      "id": 1,
+      "properties": {
+        "language": "chi"
+      },
+      "type": "audio"
+    },
+    {
+      "codec": "SubRip/SRT",
+      "id": 2,
+      "properties": {
+        "codec_id": "S_TEXT/UTF8",
+        "encoding": "UTF-8",
+        "language": "eng",
+        "number": 3,
+        "text_subtitles": true,
+        "uid": 3
+      },
+      "type": "subtitles"
+    },
+    {
+      "codec": "SubRip/SRT",
+      "id": 3,
+      "properties": {
+        "codec_id": "S_TEXT/UTF8",
+        "encoding": "UTF-8",
+        "language": "chi",
+        "number": 4,
+        "text_subtitles": true,
+        "uid": 4
+      },
+      "type": "subtitles"
+    }
+  ]
+}

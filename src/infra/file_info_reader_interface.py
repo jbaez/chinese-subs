@@ -16,6 +16,7 @@ class TrackType(Enum):
 
 class TrackSubCodec(Enum):
     ASS = 'SubStationAlpha'
+    SRT = 'SubRip/SRT'
 
 
 class TrackInfoProperties(BaseModel):

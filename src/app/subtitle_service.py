@@ -12,6 +12,8 @@ TEMP_EXTRACTED_ASS_FILE_PATH = 'temp_extracted_ass'
 TEMP_CONVERTED_SRT_FILE_PATH = 'temp_converted.srt'
 TEMP_PINYIN_SRT_FILE_PATH = 'temp_pinyin.srt'
 
+supported_sub_codecs = [TrackSubCodec.ASS, TrackSubCodec.SRT]
+
 
 class AddAdditionalLanguageMode(Enum):
     WITH_PINYIN = 'WITH_PINYIN'
@@ -91,14 +93,22 @@ class SubtitleService:
                 embedded_subtitle = None
 
             if embedded_subtitle is not None:
-                if embedded_subtitle.codec is not TrackSubCodec.ASS:
+                if embedded_subtitle.codec not in supported_sub_codecs:
                     return SubtitleGenerateResult.CODEC_NOT_SUPPORTED
 
-                ass_file_path = TEMP_EXTRACTED_ASS_FILE_PATH
-                self._file_info_reader.extract_subtitle(
-                    file_path,
-                    embedded_subtitle.id,
-                    ass_file_path)
+                if embedded_subtitle.codec is TrackSubCodec.ASS:
+                    ass_file_path = TEMP_EXTRACTED_ASS_FILE_PATH
+                    self._file_info_reader.extract_subtitle(
+                        file_path,
+                        embedded_subtitle.id,
+                        ass_file_path)
+                elif embedded_subtitle.codec is TrackSubCodec.SRT:
+                    srt_file_path = TEMP_CONVERTED_SRT_FILE_PATH
+                    self._file_info_reader.extract_subtitle(
+                        file_path,
+                        embedded_subtitle.id,
+                        srt_file_path)
+
             elif len(external_subtitles) == 0:
                 return SubtitleGenerateResult.NO_CHINESE_FOUND
 
@@ -225,7 +235,7 @@ class SubtitleService:
             return []
 
         all_available_tracks = [track for track in file_info.tracks
-                                if track.codec == TrackSubCodec.ASS]
+                                if track.codec in supported_sub_codecs]
 
         return list(map(lambda track: SubtitleLanguageDto(
             id=track.id, language=track.properties.language, codec=track.codec),
