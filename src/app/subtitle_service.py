@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import NamedTuple, Tuple
+from typing import List, NamedTuple, Tuple
 from infra.file_info_reader_interface import IFileInfoReader, Language, TrackSubCodec
 from infra.file_system_interface import IFileSystem
 from app.exceptions.path_not_loaded_exception import PathNotLoadedException
@@ -9,7 +9,6 @@ from app.subtitle_dto import SubtitleExternalExtension, SubtitleLanguageDto, Sub
 import os
 
 TEMP_EXTRACTED_ASS_FILE_PATH = 'temp_extracted_ass'
-TEMP_CONVERTED_SRT_FILE_PATH = 'temp_converted.srt'
 TEMP_PINYIN_SRT_FILE_PATH = 'temp_pinyin.srt'
 
 supported_sub_codecs = [TrackSubCodec.ASS, TrackSubCodec.SRT]
@@ -29,6 +28,11 @@ class LoadResult(Enum):
     FILE_LOADED = 'FILE_LOADED'
     DIR_LOADED = 'DIR_LOADED'
     INVALID_PATH = 'INVALID_PATH'
+
+
+class ValidatedFilePath(NamedTuple):
+    path: str
+    is_temp: bool
 
 
 class SubtitleService:
@@ -71,11 +75,12 @@ class SubtitleService:
             return SubtitleExternalExtension(extension)
         return None
 
-    def _generate_and_get_srt_file_path(
+    def _get_subtitle_srt_file_path(
             self,
             file_path: str,
             subtitle_id: int | str,
-            validate_is_chinese: bool = True) -> str | SubtitleGenerateResult:
+            output_file_path: str,
+            validate_is_chinese: bool = True,) -> ValidatedFilePath | SubtitleGenerateResult:
         embedded_subtitles = [subtitle for subtitle in self.get_embedded_subtitles()
                               if (validate_is_chinese == False) or (subtitle.language == Language.CHINESE)]
         external_subtitles = self.get_external_subtitles()
@@ -85,6 +90,7 @@ class SubtitleService:
 
         ass_file_path: str | None = None
         srt_file_path: str | None = None
+        is_temp_subtitle = True
         if len(embedded_subtitles) > 0:
             if self._is_embedded_subtitle(subtitle_id):
                 embedded_subtitle = next((sub for sub in embedded_subtitles
@@ -103,7 +109,7 @@ class SubtitleService:
                         embedded_subtitle.id,
                         ass_file_path)
                 elif embedded_subtitle.codec is TrackSubCodec.SRT:
-                    srt_file_path = TEMP_CONVERTED_SRT_FILE_PATH
+                    srt_file_path = output_file_path
                     self._file_info_reader.extract_subtitle(
                         file_path,
                         embedded_subtitle.id,
@@ -112,7 +118,7 @@ class SubtitleService:
             elif len(external_subtitles) == 0:
                 return SubtitleGenerateResult.NO_CHINESE_FOUND
 
-        if len(external_subtitles) > 0:
+        if srt_file_path is None and len(external_subtitles) > 0:
             if not self._is_embedded_subtitle(subtitle_id):
                 source_subtitle = next((sub for sub in external_subtitles
                                         if sub.id == subtitle_id))
@@ -121,9 +127,10 @@ class SubtitleService:
                         ass_file_path = source_subtitle.path
                     elif source_subtitle.extension == SubtitleExternalExtension.SRT:
                         srt_file_path = source_subtitle.path
+                        is_temp_subtitle = False
 
         if ass_file_path is not None:
-            srt_file_path = TEMP_CONVERTED_SRT_FILE_PATH
+            srt_file_path = output_file_path
             converter = SubtitleConverter(self._file_system)
             converter.convert_ass_to_srt(
                 ass_file_path, srt_file_path)
@@ -133,7 +140,7 @@ class SubtitleService:
         if srt_file_path is None:
             return SubtitleGenerateResult.NO_SUBTITLES_FOUND
 
-        return srt_file_path
+        return ValidatedFilePath(is_temp=is_temp_subtitle, path=srt_file_path)
 
     def _generate_subtitle(self,
                            chinese_subtitle_id: int | str,
@@ -163,11 +170,17 @@ class SubtitleService:
             chinese_subtitle_id: int | str,
             additional_subtitle: AddAdditionalLanguage | None = None) -> SubtitleGenerateResult:
 
-        srt_file_path = self._generate_and_get_srt_file_path(
-            file_path, chinese_subtitle_id)
+        temp_file_paths: List[str] = []
+        srt_file_path = self._get_subtitle_srt_file_path(
+            file_path=file_path,
+            subtitle_id=chinese_subtitle_id,
+            output_file_path='temp_one.srt')
 
         if isinstance(srt_file_path, SubtitleGenerateResult):
             return srt_file_path
+
+        if srt_file_path.is_temp:
+            temp_file_paths.append(srt_file_path.path)
 
         if additional_subtitle is None or\
                 (additional_subtitle and additional_subtitle.mode == AddAdditionalLanguageMode.WITH_CHINESE_AND_PINYIN):
@@ -180,30 +193,32 @@ class SubtitleService:
                 file_path, ' generated.srt')
         else:
             pinyin_file_path = TEMP_PINYIN_SRT_FILE_PATH
+            temp_file_paths.append(pinyin_file_path)
 
         manipulator = SubtitleManipulator(self._file_system)
         manipulator.add_pinyin_to_subtitle(
-            srt_file_path, pinyin_file_path, keep_chinese)
-
-        if srt_file_path == TEMP_CONVERTED_SRT_FILE_PATH:
-            self._file_system.remove(srt_file_path)
+            srt_file_path.path, pinyin_file_path, keep_chinese)
 
         if additional_subtitle is not None:
-            srt_file_path = self._generate_and_get_srt_file_path(
-                file_path, additional_subtitle.subtitle_id, False)
+            srt_file_path = self._get_subtitle_srt_file_path(
+                file_path=file_path,
+                subtitle_id=additional_subtitle.subtitle_id,
+                output_file_path='temp_two.srt',
+                validate_is_chinese=False)
+
             if isinstance(srt_file_path, SubtitleGenerateResult):
                 return srt_file_path
+
+            if srt_file_path.is_temp:
+                temp_file_paths.append(srt_file_path.path)
 
             final_file_path = self._get_base_file_path_appending(
                 file_path, ' generated.srt')
             manipulator.add_language_to_subtitle(
-                pinyin_file_path, srt_file_path, final_file_path)
+                pinyin_file_path, srt_file_path.path, final_file_path)
 
-            if srt_file_path == TEMP_CONVERTED_SRT_FILE_PATH:
-                self._file_system.remove(srt_file_path)
-
-            if pinyin_file_path == TEMP_PINYIN_SRT_FILE_PATH:
-                self._file_system.remove(pinyin_file_path)
+        for temp_file_path in temp_file_paths:
+            self._file_system.remove(temp_file_path)
 
         return SubtitleGenerateResult.SUCCESS
 
