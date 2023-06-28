@@ -1,6 +1,12 @@
+from enum import Enum
 from infra.file_system_interface import IFileSystem
 from pypinyin import pinyin
 import srt
+
+
+class Color(Enum):
+    WHITE = '#ffffff'
+    CYAN = '#00ffff'
 
 
 class SubtitleManipulator:
@@ -9,6 +15,15 @@ class SubtitleManipulator:
 
     def _to_pinyin(self, chinese: str):
         return ' '.join([seg[0] for seg in pinyin(chinese)])
+
+    def _get_text_with_color(self, subtitle: srt.Subtitle, color: Color | None) -> str:
+        if color is None:
+            return subtitle
+
+        content = subtitle.content
+        new_content = f'<font color="{color.value}">{content}</font>'
+        subtitle.content = new_content
+        return subtitle
 
     def add_pinyin_to_subtitle(
             self,
@@ -30,7 +45,13 @@ class SubtitleManipulator:
 
             self._file_system.write(out_path, srt.compose(converted_subs))
 
-    def add_language_to_subtitle(self, src_path: str, src_other_language_path: str,  out_path: str) -> None:
+    def add_language_to_subtitle(
+            self,
+            src_path: str,
+            src_other_language_path: str,
+            out_path: str,
+            src_color: Color | None = None,
+            src_other_color: Color | None = None) -> None:
         converted_subs: list[srt.Subtitle] = []
 
         with self._file_system.open(file=src_path, encoding='utf-8') as src_file,\
@@ -39,10 +60,12 @@ class SubtitleManipulator:
             additional_subs = srt.parse(src_other_file)
 
             for sub in original_subs:
-                converted_subs.append(sub)
+                converted_subs.append(
+                    self._get_text_with_color(sub, src_color))
 
             for sub in additional_subs:
-                converted_subs.append(sub)
+                converted_subs.append(
+                    self._get_text_with_color(sub, src_other_color))
 
         srt.sort_and_reindex(converted_subs, start_index=1,
                              in_place=True, skip=True)

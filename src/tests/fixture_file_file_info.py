@@ -88,7 +88,7 @@ CHINESE_SUBTITLE_WITH_PINYIN = '''1
 
 CHINESE_SUBTITLE_WITH_ENGLISH = '''1
 00:00:06,850 --> 00:00:09,970
-‎VIDEO 原创动画剧集
+<font color="#00ffff">‎VIDEO 原创动画剧集</font>
 
 2
 00:00:26,100 --> 00:00:29,270
@@ -101,7 +101,7 @@ TARGET
 
 4
 00:01:20,350 --> 00:01:22,970
-‎真不愧是天下第一刺客
+<font color="#00ffff">‎真不愧是天下第一刺客</font>
 
 5
 00:01:20,350 --> 00:01:22,970

@@ -4,7 +4,7 @@ from infra.file_info_reader_interface import IFileInfoReader, Language, TrackSub
 from infra.file_system_interface import IFileSystem
 from app.exceptions.path_not_loaded_exception import PathNotLoadedException
 from app.core.subtitle_converter import SubtitleConverter
-from app.core.subtitle_manipulator import SubtitleManipulator
+from app.core.subtitle_manipulator import Color, SubtitleManipulator
 from app.subtitle_dto import SubtitleExternalExtension, SubtitleLanguageDto, SubtitleExternalDto, SubtitleGenerateResult
 import os
 
@@ -217,10 +217,15 @@ class SubtitleService:
             if srt_file_path.is_temp:
                 temp_file_paths.append(srt_file_path.path)
 
+            src_color = Color.CYAN if additional_subtitle.mode == AddAdditionalLanguageMode.WITHOUT_PINYIN else None
+
             final_file_path = self._get_base_file_path_appending(
                 file_path, ' generated.srt')
             manipulator.add_language_to_subtitle(
-                pinyin_file_path, srt_file_path.path, final_file_path)
+                src_path=pinyin_file_path,
+                src_other_language_path=srt_file_path.path,
+                out_path=final_file_path,
+                src_color=src_color)
 
         for temp_file_path in temp_file_paths:
             self._file_system.remove(temp_file_path)
