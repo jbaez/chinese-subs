@@ -14,15 +14,18 @@ CHINESE_WITH_PINYIN: Literal['CHINESE_WITH_PINYIN'] = 'CHINESE_WITH_PINYIN'
 def get_generate_subtitle_mode() -> AddAdditionalLanguageMode | Literal['CHINESE_WITH_PINYIN']:
     mode = input('\nGenerate subtitle mode:\n'
                  + 'a - chinese with pinyin\n'
-                 + 'b - other language with pinyin\n'
+                 + 'b - chinese with other language\n'
                  + 'c - chinese with pinyin and other language\n'
+                 + 'd - other language with pinyin\n'
                  + 'Input choice: ')
     if mode == 'a':
         return CHINESE_WITH_PINYIN
     elif mode == 'b':
-        return AddAdditionalLanguageMode.WITH_PINYIN
+        return AddAdditionalLanguageMode.WITHOUT_PINYIN
     elif mode == 'c':
         return AddAdditionalLanguageMode.WITH_CHINESE_AND_PINYIN
+    elif mode == 'd':
+        return AddAdditionalLanguageMode.WITH_PINYIN
     else:
         print('Invalid mode')
         return get_generate_subtitle_mode()

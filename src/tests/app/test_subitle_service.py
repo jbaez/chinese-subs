@@ -5,7 +5,7 @@ from infra.file_info_reader_interface import Language, TrackSubCodec
 from app.subtitle_service import AddAdditionalLanguage, AddAdditionalLanguageMode, LoadResult, SubtitleService
 from app.exceptions.path_not_loaded_exception import PathNotLoadedException
 from app.subtitle_dto import SubtitleExternalDto, SubtitleExternalExtension, SubtitleLanguageDto, SubtitleGenerateResult
-from tests.fixture_file_file_info import CHINESE_SUBTITLE_WITH_PINYIN_AND_ENGLISH, ENGLISH_SUBTITLE_ASS, ENGLISH_SUBTITLE_SRT, ENGLISH_SUBTITLE_WITH_PINYIN, SUBTITLE_2_EXPECTED_PATH, VIDEO_2_FILE_PATH, VIDEOS_DIR_PATH, get_embedded_ass_fixture,\
+from tests.fixture_file_file_info import CHINESE_SUBTITLE_WITH_ENGLISH, CHINESE_SUBTITLE_WITH_PINYIN_AND_ENGLISH, ENGLISH_SUBTITLE_ASS, ENGLISH_SUBTITLE_SRT, ENGLISH_SUBTITLE_WITH_PINYIN, SUBTITLE_2_EXPECTED_PATH, VIDEO_2_FILE_PATH, VIDEOS_DIR_PATH, get_embedded_ass_fixture,\
     VIDEO_FILE_PATH, SUBTITLE_EXPECTED_PATH, SubTrackID,\
     CHINESE_SUBTITLE_ASS, CHINESE_SUBTITLE_WITH_PINYIN, CHINESE_SUBTITLE_SRT, get_embedded_srt_fixture
 
@@ -122,6 +122,28 @@ class TestSubtitleServiceEmbeddedAssSubs(TestCase):
         self.assertIn(SUBTITLE_EXPECTED_PATH, remaining_paths_after_cleanup)
         self.assertIn(self.file_path, remaining_paths_after_cleanup)
 
+    def test_generate_chinese_subtitle_with_other_language(self):
+        '''
+            given there is a chinese subtitle with TrackSubCodec.ASS and ID 3
+            when attempting to generate a subtitle with ID '3'
+            and adding english as the additional language using ID '2'
+            then a subtitle is generated with pinyin and extension .srt
+            and any temporary files are deleted
+        '''
+        self.file_info_reader.add_extracted_content(CHINESE_SUBTITLE_ASS)
+        self.file_info_reader.add_extracted_content(ENGLISH_SUBTITLE_ASS)
+        result = self.sut.generate_subtitle_with_additional_language('3', AddAdditionalLanguage(
+            mode=AddAdditionalLanguageMode.WITHOUT_PINYIN, subtitle_id='2'))
+
+        self.assertEqual(result, SubtitleGenerateResult.SUCCESS)
+        self.assertEqual(self.file_system.read(SUBTITLE_EXPECTED_PATH),
+                         CHINESE_SUBTITLE_WITH_ENGLISH)
+        remaining_paths_after_cleanup = self.file_system.get_file_paths()
+        print(remaining_paths_after_cleanup)
+        self.assertEqual(len(remaining_paths_after_cleanup), 2)
+        self.assertIn(SUBTITLE_EXPECTED_PATH, remaining_paths_after_cleanup)
+        self.assertIn(self.file_path, remaining_paths_after_cleanup)
+
     def test_generate_chinese_subtitle_with_pinyin_and_additional_language(self):
         '''
             given there is a chinese subtitle with TrackSubCodec.ASS and ID 3
@@ -141,7 +163,6 @@ class TestSubtitleServiceEmbeddedAssSubs(TestCase):
                 subtitle_id='2'))
 
         self.assertEqual(result, SubtitleGenerateResult.SUCCESS)
-        print(self.file_system.read(SUBTITLE_EXPECTED_PATH))
         self.assertEqual(self.file_system.read(SUBTITLE_EXPECTED_PATH),
                          CHINESE_SUBTITLE_WITH_PINYIN_AND_ENGLISH)
         remaining_paths_after_cleanup = self.file_system.get_file_paths()
@@ -168,7 +189,6 @@ class TestSubtitleServiceEmbeddedAssSubs(TestCase):
                 subtitle_id='2'))
 
         self.assertEqual(result, SubtitleGenerateResult.SUCCESS)
-        print(self.file_system.read(SUBTITLE_EXPECTED_PATH))
         self.assertEqual(self.file_system.read(SUBTITLE_EXPECTED_PATH),
                          ENGLISH_SUBTITLE_WITH_PINYIN)
         remaining_paths_after_cleanup = self.file_system.get_file_paths()
@@ -271,7 +291,6 @@ class TestSubtitleServiceEmbeddedSrtSubs(TestCase):
                 subtitle_id='2'))
 
         self.assertEqual(result, SubtitleGenerateResult.SUCCESS)
-        print(self.file_system.read(SUBTITLE_EXPECTED_PATH))
         self.assertEqual(self.file_system.read(SUBTITLE_EXPECTED_PATH),
                          CHINESE_SUBTITLE_WITH_PINYIN_AND_ENGLISH)
         remaining_paths_after_cleanup = self.file_system.get_file_paths()
@@ -298,7 +317,6 @@ class TestSubtitleServiceEmbeddedSrtSubs(TestCase):
                 subtitle_id='2'))
 
         self.assertEqual(result, SubtitleGenerateResult.SUCCESS)
-        print(self.file_system.read(SUBTITLE_EXPECTED_PATH))
         self.assertEqual(self.file_system.read(SUBTITLE_EXPECTED_PATH),
                          ENGLISH_SUBTITLE_WITH_PINYIN)
         remaining_paths_after_cleanup = self.file_system.get_file_paths()

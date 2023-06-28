@@ -17,6 +17,7 @@ supported_sub_codecs = [TrackSubCodec.ASS, TrackSubCodec.SRT]
 class AddAdditionalLanguageMode(Enum):
     WITH_PINYIN = 'WITH_PINYIN'
     WITH_CHINESE_AND_PINYIN = 'WITH_CHINESE_AND_PINYIN'
+    WITHOUT_PINYIN = 'WITHOUT_PINYIN'
 
 
 class AddAdditionalLanguage(NamedTuple):
@@ -191,13 +192,17 @@ class SubtitleService:
         if additional_subtitle is None:
             pinyin_file_path = self._get_base_file_path_appending(
                 file_path, ' generated.srt')
-        else:
+        elif additional_subtitle.mode != AddAdditionalLanguageMode.WITHOUT_PINYIN:
             pinyin_file_path = TEMP_PINYIN_SRT_FILE_PATH
             temp_file_paths.append(pinyin_file_path)
+        else:
+            pinyin_file_path = srt_file_path.path
 
         manipulator = SubtitleManipulator(self._file_system)
-        manipulator.add_pinyin_to_subtitle(
-            srt_file_path.path, pinyin_file_path, keep_chinese)
+
+        if additional_subtitle is None or additional_subtitle.mode != AddAdditionalLanguageMode.WITHOUT_PINYIN:
+            manipulator.add_pinyin_to_subtitle(
+                srt_file_path.path, pinyin_file_path, keep_chinese)
 
         if additional_subtitle is not None:
             srt_file_path = self._get_subtitle_srt_file_path(
