@@ -127,7 +127,7 @@ class TestSubtitleServiceEmbeddedAssSubs(TestCase):
             given there is a chinese subtitle with TrackSubCodec.ASS and ID 3
             when attempting to generate a subtitle with ID '3'
             and adding english as the additional language using ID '2'
-            then a subtitle is generated with pinyin and extension .srt
+            then a subtitle is generated with english with extension .srt
             and any temporary files are deleted
         '''
         self.file_info_reader.add_extracted_content(CHINESE_SUBTITLE_ASS)

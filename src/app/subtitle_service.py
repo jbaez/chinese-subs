@@ -165,6 +165,50 @@ class SubtitleService:
         else:
             return self._generate_subtitle_for_path(file_path, chinese_subtitle_id, additional_subtitle)
 
+    def _generate_chinese_with_pinyin(self, chinese_subtitle_path: ValidatedFilePath, output_file_path: str) -> None:
+        manipulator = SubtitleManipulator(self._file_system)
+        manipulator.add_pinyin_to_subtitle(
+            src_path_chinese=chinese_subtitle_path.path,
+            out_path=output_file_path,
+            keep_chinese=True
+        )
+
+    def _generate_chinese_with_other_language_and_pinyin(self, chinese_subtitle_path: ValidatedFilePath, other_subtitle_path: ValidatedFilePath, output_file_path: str) -> None:
+        manipulator = SubtitleManipulator(self._file_system)
+        manipulator.add_pinyin_to_subtitle(
+            src_path_chinese=chinese_subtitle_path.path,
+            out_path=TEMP_PINYIN_SRT_FILE_PATH,
+            keep_chinese=True
+        )
+        manipulator.add_language_to_subtitle(
+            src_path=TEMP_PINYIN_SRT_FILE_PATH,
+            src_other_language_path=other_subtitle_path.path,
+            out_path=output_file_path,
+        )
+        self._file_system.remove(TEMP_PINYIN_SRT_FILE_PATH)
+
+    def _generate_other_language_with_pinyin(self, chinese_subtitle_path: ValidatedFilePath, other_subtitle_path: ValidatedFilePath, output_file_path: str) -> None:
+        manipulator = SubtitleManipulator(self._file_system)
+        manipulator.add_pinyin_to_subtitle(
+            src_path_chinese=chinese_subtitle_path.path,
+            out_path=TEMP_PINYIN_SRT_FILE_PATH,
+            keep_chinese=False
+        )
+        manipulator.add_language_to_subtitle(
+            src_path=TEMP_PINYIN_SRT_FILE_PATH,
+            src_other_language_path=other_subtitle_path.path,
+            out_path=output_file_path)
+
+        self._file_system.remove(TEMP_PINYIN_SRT_FILE_PATH)
+
+    def _generate_chinese_with_other_language(self, chinese_subtitle_path: ValidatedFilePath, other_subtitle_path: ValidatedFilePath, output_file_path: str) -> None:
+        manipulator = SubtitleManipulator(self._file_system)
+        manipulator.add_language_to_subtitle(
+            src_path=chinese_subtitle_path.path,
+            src_other_language_path=other_subtitle_path.path,
+            out_path=output_file_path,
+            src_color=Color.CYAN)
+
     def _generate_subtitle_for_path(
             self,
             file_path: str,
@@ -172,60 +216,57 @@ class SubtitleService:
             additional_subtitle: AddAdditionalLanguage | None = None) -> SubtitleGenerateResult:
 
         temp_file_paths: List[str] = []
-        srt_file_path = self._get_subtitle_srt_file_path(
+        chinese_file_path = self._get_subtitle_srt_file_path(
             file_path=file_path,
             subtitle_id=chinese_subtitle_id,
             output_file_path='temp_one.srt')
 
-        if isinstance(srt_file_path, SubtitleGenerateResult):
-            return srt_file_path
+        if isinstance(chinese_file_path, SubtitleGenerateResult):
+            return chinese_file_path
 
-        if srt_file_path.is_temp:
-            temp_file_paths.append(srt_file_path.path)
+        if chinese_file_path.is_temp:
+            temp_file_paths.append(chinese_file_path.path)
 
-        if additional_subtitle is None or\
-                (additional_subtitle and additional_subtitle.mode == AddAdditionalLanguageMode.WITH_CHINESE_AND_PINYIN):
-            keep_chinese = True
-        else:
-            keep_chinese = False
+        output_file_path = self._get_base_file_path_appending(
+            file_path, ' generated.srt')
 
         if additional_subtitle is None:
-            pinyin_file_path = self._get_base_file_path_appending(
-                file_path, ' generated.srt')
-        elif additional_subtitle.mode != AddAdditionalLanguageMode.WITHOUT_PINYIN:
-            pinyin_file_path = TEMP_PINYIN_SRT_FILE_PATH
-            temp_file_paths.append(pinyin_file_path)
+            self._generate_chinese_with_pinyin(
+                chinese_subtitle_path=chinese_file_path,
+                output_file_path=output_file_path)
         else:
-            pinyin_file_path = srt_file_path.path
-
-        manipulator = SubtitleManipulator(self._file_system)
-
-        if additional_subtitle is None or additional_subtitle.mode != AddAdditionalLanguageMode.WITHOUT_PINYIN:
-            manipulator.add_pinyin_to_subtitle(
-                srt_file_path.path, pinyin_file_path, keep_chinese)
-
-        if additional_subtitle is not None:
-            srt_file_path = self._get_subtitle_srt_file_path(
+            other_subtitle_path = self._get_subtitle_srt_file_path(
                 file_path=file_path,
                 subtitle_id=additional_subtitle.subtitle_id,
                 output_file_path='temp_two.srt',
                 validate_is_chinese=False)
 
-            if isinstance(srt_file_path, SubtitleGenerateResult):
-                return srt_file_path
+            if isinstance(other_subtitle_path, SubtitleGenerateResult):
+                return other_subtitle_path
 
-            if srt_file_path.is_temp:
-                temp_file_paths.append(srt_file_path.path)
+            if other_subtitle_path.is_temp:
+                temp_file_paths.append(other_subtitle_path.path)
 
-            src_color = Color.CYAN if additional_subtitle.mode == AddAdditionalLanguageMode.WITHOUT_PINYIN else None
+            if additional_subtitle.mode == AddAdditionalLanguageMode.WITH_CHINESE_AND_PINYIN:
+                self._generate_chinese_with_other_language_and_pinyin(
+                    chinese_subtitle_path=chinese_file_path,
+                    other_subtitle_path=other_subtitle_path,
+                    output_file_path=output_file_path)
 
-            final_file_path = self._get_base_file_path_appending(
-                file_path, ' generated.srt')
-            manipulator.add_language_to_subtitle(
-                src_path=pinyin_file_path,
-                src_other_language_path=srt_file_path.path,
-                out_path=final_file_path,
-                src_color=src_color)
+            elif additional_subtitle.mode == AddAdditionalLanguageMode.WITHOUT_PINYIN:
+                self._generate_chinese_with_other_language(
+                    chinese_subtitle_path=chinese_file_path,
+                    other_subtitle_path=other_subtitle_path,
+                    output_file_path=output_file_path)
+
+            elif additional_subtitle.mode == AddAdditionalLanguageMode.WITH_PINYIN:
+                self._generate_other_language_with_pinyin(
+                    chinese_subtitle_path=chinese_file_path,
+                    other_subtitle_path=other_subtitle_path,
+                    output_file_path=output_file_path)
+            else:
+                raise Exception(
+                    f'Invalid AddAdditionalLanguageMode: {additional_subtitle.mode}')
 
         for temp_file_path in temp_file_paths:
             self._file_system.remove(temp_file_path)
