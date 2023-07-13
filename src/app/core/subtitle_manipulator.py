@@ -1,7 +1,10 @@
+import datetime
 from enum import Enum
 from infra.file_system_interface import IFileSystem
 from pypinyin import pinyin
 import srt
+import srt_tools.utils as srt_utils
+import operator
 
 
 class Color(Enum):
@@ -24,6 +27,32 @@ class SubtitleManipulator:
         new_content = f'<font color="{color.value}">{content}</font>'
         subtitle.content = new_content
         return subtitle
+
+    def _merge_subs(self, subs: list[srt.Subtitle], acceptable_diff: int, attr: str, width: int):
+        """
+        Merge subs with similar start/end times together. This prevents the
+        subtitles jumping around the screen.
+
+        The merge is done in-place.
+        This code is taken from srt_tools/srt-mux
+        """
+        sorted_subs = sorted(subs, key=operator.attrgetter(attr))
+        acceptable_time_delta = datetime.timedelta(
+            milliseconds=acceptable_diff)
+
+        for subs in srt_utils.sliding_window(sorted_subs, width=width):
+            current_sub = subs[0]
+            future_subs = subs[1:]
+            current_comp: datetime.timedelta = getattr(current_sub, attr)
+
+            for future_sub in future_subs:
+                future_comp: datetime.timedelta = getattr(future_sub, attr)
+                if current_comp + acceptable_time_delta > future_comp:
+                    setattr(future_sub, attr, current_comp)
+                else:
+                    # Since these are sorted, and this one didn't match, we can be
+                    # sure future ones won't match either.
+                    break
 
     def add_pinyin_to_subtitle(
             self,
@@ -60,13 +89,22 @@ class SubtitleManipulator:
             additional_subs = srt.parse(src_other_file)
 
             for sub in original_subs:
-                converted_subs.append(
-                    self._get_text_with_color(sub, src_color))
+                if src_color is not None:
+                    converted_subs.append(
+                        self._get_text_with_color(sub, src_color))
+                else:
+                    converted_subs.append(sub)
 
             for sub in additional_subs:
-                converted_subs.append(
-                    self._get_text_with_color(sub, src_other_color))
+                if src_other_color is not None:
+                    converted_subs.append(
+                        self._get_text_with_color(sub, src_other_color))
+                else:
+                    converted_subs.append(sub)
 
-        srt.sort_and_reindex(converted_subs, start_index=1,
-                             in_place=True, skip=True)
-        self._file_system.write(out_path, srt.compose(converted_subs))
+            self._merge_subs(converted_subs, 800, 'start', 2)
+            self._merge_subs(converted_subs, 800, 'end', 2)
+
+        output = srt_utils.compose_suggest_on_fail(converted_subs)
+
+        self._file_system.write(out_path, output)

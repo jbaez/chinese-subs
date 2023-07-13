@@ -159,6 +159,90 @@ in the world.
 
 '''
 
+CHINESE_SUBTITLE_SRT_UNMATCHED_TIMINGS_SRT = '''1
+00:00:06,850 --> 00:00:09,970
+‎VIDEO 原创动画剧集
+
+2
+00:01:20,350 --> 00:01:22,970
+‎真不愧是天下第一刺客
+
+3
+00:02:20,791 --> 00:02:22,625
+‪那個髮型師竟然是…
+
+4
+00:02:22,708 --> 00:02:26,083
+‪聽說他要去玄武國取首領的人頭了
+
+'''
+
+ENGLISH_SUBTITLE_UNMATCHED_TIMINGS_SRT = '''1
+00:00:26,100 --> 00:00:29,270
+MISSION 1
+KILL BAD PEOPLE, EARN GOOD MONEY
+
+2
+00:00:42,180 --> 00:00:44,600
+TARGET
+
+3
+00:01:20,350 --> 00:01:22,970
+You really are the greatest killer
+in the world.
+
+4
+00:02:20,791 --> 00:02:22,583
+That hairdresser can't be…
+
+5
+00:02:22,666 --> 00:02:25,375
+I heard that he was going to
+behead the leader of Xuanwu.
+
+'''
+
+CHINESE_SUBTITLE_WITH_ENGLISH_UNMATCHED_TIMINGS = '''1
+00:00:06,850 --> 00:00:09,970
+<font color="#00ffff">‎VIDEO 原创动画剧集</font>
+
+2
+00:00:26,100 --> 00:00:29,270
+MISSION 1
+KILL BAD PEOPLE, EARN GOOD MONEY
+
+3
+00:00:42,180 --> 00:00:44,600
+TARGET
+
+4
+00:01:20,350 --> 00:01:22,970
+<font color="#00ffff">‎真不愧是天下第一刺客</font>
+
+5
+00:01:20,350 --> 00:01:22,970
+You really are the greatest killer
+in the world.
+
+6
+00:02:20,791 --> 00:02:22,583
+<font color="#00ffff">‪那個髮型師竟然是…</font>
+
+7
+00:02:20,791 --> 00:02:22,583
+That hairdresser can't be…
+
+8
+00:02:22,666 --> 00:02:25,375
+<font color="#00ffff">‪聽說他要去玄武國取首領的人頭了</font>
+
+9
+00:02:22,666 --> 00:02:25,375
+I heard that he was going to
+behead the leader of Xuanwu.
+
+'''
+
 
 def get_embedded_ass_fixture() -> FileInfoDto:
     return FileInfoDto.parse_file('src/tests/fixture_file_info_ass.json')
