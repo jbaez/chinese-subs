@@ -17,11 +17,13 @@ class SubtitleManipulator:
     def _to_pinyin(self, chinese: str):
         return ' '.join([seg[0] for seg in pinyin(chinese)])
 
-    def _add_color_to_text(self, subtitle: srt.Subtitle, color: Color) -> srt.Subtitle:
+    def _get_text_with_color(self, text: str, color: Color) -> str:
+        return f'<font color="{color.value}">{text}</font>'
+
+    def _add_color_to_subtitle_content(self, subtitle: srt.Subtitle, color: Color):
         content = subtitle.content
-        new_content = f'<font color="{color.value}">{content}</font>'
+        new_content = self._get_text_with_color(text=content, color=color)
         subtitle.content = new_content
-        return subtitle
 
     def _should_merge_subtitles(self, sub_one: srt.Subtitle, sub_two: srt.Subtitle) -> bool:
         start_dif = abs(sub_one.start.total_seconds() -
@@ -42,6 +44,9 @@ class SubtitleManipulator:
 
         return False
 
+    def _is_subtitle_ending_before_second_start(self, sub_one: srt.Subtitle, sub_two: srt.Subtitle) -> bool:
+        return sub_one.end < sub_two.start
+
     def add_pinyin_to_subtitle(
             self,
             src_path_chinese: str,
@@ -56,7 +61,8 @@ class SubtitleManipulator:
             for sub in subs:
                 content = sub.content
                 new_content = content + '\n' if keep_chinese else ''
-                new_content += f'<font color="#00ffff">{self._to_pinyin(content)}</font>'
+                new_content += self._get_text_with_color(
+                    text=self._to_pinyin(content), color=Color.CYAN)
                 sub.content = new_content
                 converted_subs.append(sub)
 
@@ -85,15 +91,18 @@ class SubtitleManipulator:
             additional_sub = next(additional_subs, None)
 
             while original_sub is not None or additional_sub is not None:
-                if original_sub is not None and (additional_sub is None or original_sub.end < additional_sub.start):
+                if original_sub is not None and (additional_sub is None or self._is_subtitle_ending_before_second_start(original_sub, additional_sub)):
                     if src_color is not None:
-                        self._add_color_to_text(original_sub, src_color)
+                        self._add_color_to_subtitle_content(
+                            original_sub, src_color)
 
                     converted_subs.append(original_sub)
                     original_sub = next(original_subs, None)
-                elif additional_sub is not None and (original_sub is None or additional_sub.end < original_sub.start):
+
+                elif additional_sub is not None and (original_sub is None or self._is_subtitle_ending_before_second_start(additional_sub, original_sub)):
                     converted_subs.append(additional_sub)
                     additional_sub = next(additional_subs, None)
+
                 elif original_sub is not None and additional_sub is not None:
                     if self._should_merge_subtitles(sub_one=original_sub, sub_two=additional_sub):
                         if self._should_adjust_subtitle_start_time(source_sub=original_sub, sub_to_adjust=additional_sub):
@@ -108,18 +117,21 @@ class SubtitleManipulator:
                             original_sub.end = additional_sub.end
 
                         if src_color is not None:
-                            self._add_color_to_text(original_sub, src_color)
+                            self._add_color_to_subtitle_content(
+                                original_sub, src_color)
 
                         original_sub.content = additional_sub.content + '\n' + original_sub.content
                         converted_subs.append(original_sub)
+
                     else:
                         if src_color is not None:
-                            self._add_color_to_text(original_sub, src_color)
+                            self._add_color_to_subtitle_content(
+                                original_sub, src_color)
 
                         converted_subs.append(original_sub)
 
                         if src_other_color is not None:
-                            self._add_color_to_text(
+                            self._add_color_to_subtitle_content(
                                 additional_sub, src_other_color)
 
                         converted_subs.append(additional_sub)
