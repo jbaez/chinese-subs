@@ -1,10 +1,9 @@
-import datetime
 from enum import Enum
 from infra.file_system_interface import IFileSystem
 from pypinyin import pinyin
 import srt
-import srt_tools.utils as srt_utils
-import operator
+
+MAX_SECONDS_DIFF = 0.6
 
 
 class Color(Enum):
@@ -19,40 +18,23 @@ class SubtitleManipulator:
     def _to_pinyin(self, chinese: str):
         return ' '.join([seg[0] for seg in pinyin(chinese)])
 
-    def _get_text_with_color(self, subtitle: srt.Subtitle, color: Color | None) -> str:
-        if color is None:
-            return subtitle
-
+    def _add_color_to_text(self, subtitle: srt.Subtitle, color: Color) -> srt.Subtitle:
         content = subtitle.content
         new_content = f'<font color="{color.value}">{content}</font>'
         subtitle.content = new_content
         return subtitle
 
-    def _merge_subs(self, subs: list[srt.Subtitle], acceptable_diff: int, attr: str, width: int):
-        """
-        Merge subs with similar start/end times together. This prevents the
-        subtitles jumping around the screen.
+    def _should_adjust_subtitle_start_time(self, source_sub: srt.Subtitle, sub_to_adjust: srt.Subtitle) -> bool:
+        if source_sub.start < sub_to_adjust.start:
+            return abs(sub_to_adjust.start.total_seconds() - source_sub.start.total_seconds()) < MAX_SECONDS_DIFF
 
-        The merge is done in-place.
-        This code is taken from srt_tools/srt-mux
-        """
-        sorted_subs = sorted(subs, key=operator.attrgetter(attr))
-        acceptable_time_delta = datetime.timedelta(
-            milliseconds=acceptable_diff)
+        return False
 
-        for subs in srt_utils.sliding_window(sorted_subs, width=width):
-            current_sub = subs[0]
-            future_subs = subs[1:]
-            current_comp: datetime.timedelta = getattr(current_sub, attr)
+    def _should_adjust_subtitle_end_time(self, source_sub: srt.Subtitle, sub_to_adjust: srt.Subtitle) -> bool:
+        if source_sub.end > sub_to_adjust.end:
+            return abs(source_sub.end.total_seconds() - sub_to_adjust.end.total_seconds()) < MAX_SECONDS_DIFF
 
-            for future_sub in future_subs:
-                future_comp: datetime.timedelta = getattr(future_sub, attr)
-                if current_comp + acceptable_time_delta > future_comp:
-                    setattr(future_sub, attr, current_comp)
-                else:
-                    # Since these are sorted, and this one didn't match, we can be
-                    # sure future ones won't match either.
-                    break
+        return False
 
     def add_pinyin_to_subtitle(
             self,
@@ -88,23 +70,45 @@ class SubtitleManipulator:
             original_subs = srt.parse(src_file)
             additional_subs = srt.parse(src_other_file)
 
-            for sub in original_subs:
-                if src_color is not None:
-                    converted_subs.append(
-                        self._get_text_with_color(sub, src_color))
+            srt.sort_and_reindex(original_subs, start_index=1,
+                                 in_place=True, skip=True)
+            srt.sort_and_reindex(additional_subs, start_index=1,
+                                 in_place=True, skip=True)
+
+            original_sub = next(original_subs, None)
+            additional_sub = next(additional_subs, None)
+
+            while original_sub is not None or additional_sub is not None:
+                if original_sub is not None and (additional_sub is None or original_sub.end < additional_sub.start):
+                    if src_color is not None:
+                        self._add_color_to_text(original_sub, src_color)
+
+                    converted_subs.append(original_sub)
+                    original_sub = next(original_subs, None)
+                elif additional_sub is not None and (original_sub is None or additional_sub.end < original_sub.start):
+                    converted_subs.append(additional_sub)
+                    additional_sub = next(additional_subs, None)
+                elif original_sub is not None and additional_sub is not None:
+                    if self._should_adjust_subtitle_start_time(source_sub=original_sub, sub_to_adjust=additional_sub):
+
+                        additional_sub.start = original_sub.start
+                    if self._should_adjust_subtitle_end_time(source_sub=original_sub, sub_to_adjust=additional_sub):
+                        additional_sub.end = original_sub.end
+
+                    if self._should_adjust_subtitle_start_time(source_sub=additional_sub, sub_to_adjust=original_sub):
+                        original_sub.start = additional_sub.start
+                    if self._should_adjust_subtitle_end_time(source_sub=additional_sub, sub_to_adjust=original_sub):
+                        original_sub.end = additional_sub.end
+
+                    if src_color is not None:
+                        self._add_color_to_text(original_sub, src_color)
+
+                    original_sub.content = additional_sub.content + '\n' + original_sub.content
+                    converted_subs.append(original_sub)
+
+                    original_sub = next(original_subs, None)
+                    additional_sub = next(additional_subs, None)
                 else:
-                    converted_subs.append(sub)
+                    pass
 
-            for sub in additional_subs:
-                if src_other_color is not None:
-                    converted_subs.append(
-                        self._get_text_with_color(sub, src_other_color))
-                else:
-                    converted_subs.append(sub)
-
-            self._merge_subs(converted_subs, 800, 'start', 2)
-            self._merge_subs(converted_subs, 800, 'end', 2)
-
-        output = srt_utils.compose_suggest_on_fail(converted_subs)
-
-        self._file_system.write(out_path, output)
+        self._file_system.write(out_path, srt.compose(converted_subs))

@@ -101,12 +101,9 @@ TARGET
 
 4
 00:01:20,350 --> 00:01:22,970
-<font color="#00ffff">‎真不愧是天下第一刺客</font>
-
-5
-00:01:20,350 --> 00:01:22,970
 You really are the greatest killer
 in the world.
+<font color="#00ffff">‎真不愧是天下第一刺客</font>
 
 '''
 
@@ -126,12 +123,9 @@ TARGET
 
 4
 00:01:20,350 --> 00:01:22,970
-<font color="#ffffff">‎真不愧是天下第一刺客</font><br><font color="#00ffff">‎ zhēn bù kuì shì tiān xià dì yī cì kè</font>
-
-5
-00:01:20,350 --> 00:01:22,970
 You really are the greatest killer
 in the world.
+<font color="#ffffff">‎真不愧是天下第一刺客</font><br><font color="#00ffff">‎ zhēn bù kuì shì tiān xià dì yī cì kè</font>
 
 '''
 
@@ -150,12 +144,9 @@ TARGET
 
 4
 00:01:20,350 --> 00:01:22,970
-<font color="#00ffff">‎ zhēn bù kuì shì tiān xià dì yī cì kè</font>
-
-5
-00:01:20,350 --> 00:01:22,970
 You really are the greatest killer
 in the world.
+<font color="#00ffff">‎ zhēn bù kuì shì tiān xià dì yī cì kè</font>
 
 '''
 
@@ -217,29 +208,20 @@ TARGET
 
 4
 00:01:20,350 --> 00:01:22,970
+You really are the greatest killer
+in the world.
 <font color="#00ffff">‎真不愧是天下第一刺客</font>
 
 5
-00:01:20,350 --> 00:01:22,970
-You really are the greatest killer
-in the world.
-
-6
-00:02:20,791 --> 00:02:22,583
+00:02:20,791 --> 00:02:22,625
+That hairdresser can't be…
 <font color="#00ffff">‪那個髮型師竟然是…</font>
 
-7
-00:02:20,791 --> 00:02:22,583
-That hairdresser can't be…
-
-8
-00:02:22,666 --> 00:02:25,375
-<font color="#00ffff">‪聽說他要去玄武國取首領的人頭了</font>
-
-9
-00:02:22,666 --> 00:02:25,375
+6
+00:02:22,666 --> 00:02:26,083
 I heard that he was going to
 behead the leader of Xuanwu.
+<font color="#00ffff">‪聽說他要去玄武國取首領的人頭了</font>
 
 '''
 
