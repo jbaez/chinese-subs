@@ -166,6 +166,15 @@ CHINESE_SUBTITLE_SRT_UNMATCHED_TIMINGS_SRT = '''1
 00:02:22,708 --> 00:02:26,083
 ‪聽說他要去玄武國取首領的人頭了
 
+5
+00:03:45,333 --> 00:03:49,416
+‪是吗？那个吸血鬼赤牙吗？
+
+6
+00:03:49,500 --> 00:03:53,416
+‪-不是很强的吗？
+‪-对啊 我也听说了
+
 '''
 
 ENGLISH_SUBTITLE_UNMATCHED_TIMINGS_SRT = '''1
@@ -190,6 +199,18 @@ That hairdresser can't be…
 00:02:22,666 --> 00:02:25,375
 I heard that he was going to
 behead the leader of Xuanwu.
+
+6
+00:03:45,208 --> 00:03:46,208
+Yeah?
+
+7
+00:03:47,208 --> 00:03:49,250
+That vampire Redtooth?
+
+8
+00:03:49,333 --> 00:03:51,000
+Wasn't he really tough?
 
 '''
 
@@ -222,6 +243,27 @@ That hairdresser can't be…
 I heard that he was going to
 behead the leader of Xuanwu.
 <font color="#00ffff">‪聽說他要去玄武國取首領的人頭了</font>
+
+7
+00:03:45,208 --> 00:03:46,208
+Yeah?
+
+8
+00:03:45,333 --> 00:03:49,416
+<font color="#00ffff">‪是吗？那个吸血鬼赤牙吗？</font>
+
+9
+00:03:47,208 --> 00:03:49,250
+That vampire Redtooth?
+
+10
+00:03:49,333 --> 00:03:51,000
+Wasn't he really tough?
+
+11
+00:03:49,500 --> 00:03:53,416
+<font color="#00ffff">‪-不是很强的吗？
+‪-对啊 我也听说了</font>
 
 '''
 

@@ -3,7 +3,7 @@ from infra.file_system_interface import IFileSystem
 from pypinyin import pinyin
 import srt
 
-MAX_SECONDS_DIFF = 0.6
+MAX_SECONDS_DIFF = 0.8
 
 
 class Color(Enum):
@@ -23,6 +23,13 @@ class SubtitleManipulator:
         new_content = f'<font color="{color.value}">{content}</font>'
         subtitle.content = new_content
         return subtitle
+
+    def _should_merge_subtitles(self, sub_one: srt.Subtitle, sub_two: srt.Subtitle) -> bool:
+        start_dif = abs(sub_one.start.total_seconds() -
+                        sub_two.start.total_seconds())
+        end_dif = abs(sub_one.end.total_seconds() -
+                      sub_two.end.total_seconds())
+        return start_dif < MAX_SECONDS_DIFF and end_dif < MAX_SECONDS_DIFF
 
     def _should_adjust_subtitle_start_time(self, source_sub: srt.Subtitle, sub_to_adjust: srt.Subtitle) -> bool:
         if source_sub.start < sub_to_adjust.start:
@@ -89,22 +96,34 @@ class SubtitleManipulator:
                     converted_subs.append(additional_sub)
                     additional_sub = next(additional_subs, None)
                 elif original_sub is not None and additional_sub is not None:
-                    if self._should_adjust_subtitle_start_time(source_sub=original_sub, sub_to_adjust=additional_sub):
+                    if self._should_merge_subtitles(sub_one=original_sub, sub_two=additional_sub):
+                        if self._should_adjust_subtitle_start_time(source_sub=original_sub, sub_to_adjust=additional_sub):
 
-                        additional_sub.start = original_sub.start
-                    if self._should_adjust_subtitle_end_time(source_sub=original_sub, sub_to_adjust=additional_sub):
-                        additional_sub.end = original_sub.end
+                            additional_sub.start = original_sub.start
+                        if self._should_adjust_subtitle_end_time(source_sub=original_sub, sub_to_adjust=additional_sub):
+                            additional_sub.end = original_sub.end
 
-                    if self._should_adjust_subtitle_start_time(source_sub=additional_sub, sub_to_adjust=original_sub):
-                        original_sub.start = additional_sub.start
-                    if self._should_adjust_subtitle_end_time(source_sub=additional_sub, sub_to_adjust=original_sub):
-                        original_sub.end = additional_sub.end
+                        if self._should_adjust_subtitle_start_time(source_sub=additional_sub, sub_to_adjust=original_sub):
+                            original_sub.start = additional_sub.start
+                        if self._should_adjust_subtitle_end_time(source_sub=additional_sub, sub_to_adjust=original_sub):
+                            original_sub.end = additional_sub.end
 
-                    if src_color is not None:
-                        self._add_color_to_text(original_sub, src_color)
+                        if src_color is not None:
+                            self._add_color_to_text(original_sub, src_color)
 
-                    original_sub.content = additional_sub.content + '\n' + original_sub.content
-                    converted_subs.append(original_sub)
+                        original_sub.content = additional_sub.content + '\n' + original_sub.content
+                        converted_subs.append(original_sub)
+                    else:
+                        if src_color is not None:
+                            self._add_color_to_text(original_sub, src_color)
+
+                        converted_subs.append(original_sub)
+
+                        if src_other_color is not None:
+                            self._add_color_to_text(
+                                additional_sub, src_other_color)
+
+                        converted_subs.append(additional_sub)
 
                     original_sub = next(original_subs, None)
                     additional_sub = next(additional_subs, None)
