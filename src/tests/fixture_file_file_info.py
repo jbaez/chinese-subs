@@ -78,11 +78,13 @@ in the world.
 
 CHINESE_SUBTITLE_WITH_PINYIN = '''1
 00:00:06,850 --> 00:00:09,970
-<font color="#ffffff">‎VIDEO 原创动画剧集</font><br><font color="#00ffff">‎VIDEO  yuán chuàng dòng huà jù jí</font>
+‎VIDEO 原创动画剧集
+<font color="#00ffff">‎VIDEO  yuán chuàng dòng huà jù jí</font>
 
 2
 00:01:20,350 --> 00:01:22,970
-<font color="#ffffff">‎真不愧是天下第一刺客</font><br><font color="#00ffff">‎ zhēn bù kuì shì tiān xià dì yī cì kè</font>
+‎真不愧是天下第一刺客
+<font color="#00ffff">‎ zhēn bù kuì shì tiān xià dì yī cì kè</font>
 
 '''
 
@@ -110,7 +112,8 @@ in the world.
 
 CHINESE_SUBTITLE_WITH_PINYIN_AND_ENGLISH = '''1
 00:00:06,850 --> 00:00:09,970
-<font color="#ffffff">‎VIDEO 原创动画剧集</font><br><font color="#00ffff">‎VIDEO  yuán chuàng dòng huà jù jí</font>
+‎VIDEO 原创动画剧集
+<font color="#00ffff">‎VIDEO  yuán chuàng dòng huà jù jí</font>
 
 2
 00:00:26,100 --> 00:00:29,270
@@ -125,7 +128,8 @@ TARGET
 00:01:20,350 --> 00:01:22,970
 You really are the greatest killer
 in the world.
-<font color="#ffffff">‎真不愧是天下第一刺客</font><br><font color="#00ffff">‎ zhēn bù kuì shì tiān xià dì yī cì kè</font>
+‎真不愧是天下第一刺客
+<font color="#00ffff">‎ zhēn bù kuì shì tiān xià dì yī cì kè</font>
 
 '''
 

@@ -7,7 +7,6 @@ MAX_SECONDS_DIFF = 0.8
 
 
 class Color(Enum):
-    WHITE = '#ffffff'
     CYAN = '#00ffff'
 
 
@@ -56,7 +55,7 @@ class SubtitleManipulator:
 
             for sub in subs:
                 content = sub.content
-                new_content = f'<font color="#ffffff">{content}</font><br>' if keep_chinese else ''
+                new_content = content + '\n' if keep_chinese else ''
                 new_content += f'<font color="#00ffff">{self._to_pinyin(content)}</font>'
                 sub.content = new_content
                 converted_subs.append(sub)
